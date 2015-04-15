@@ -139,3 +139,4 @@
 (depends-on "direx")
 
 (depends-on "ddskk")
+(depends-on "w3m")
