@@ -73,7 +73,7 @@ zstyle ':chpwd:*' recent-dirs-default yes
 zstyle ':completion:*' recent-dirs-insert both
 
 # zaw
-source $HOME/.zsh/zaw/zaw.zsh
+source $HOME/.zaw/zaw.zsh
 zstyle ':filter-select' case-insensitive yes
 bindkey '^xf' zaw-cdr
 bindkey '^x^b' zaw-git-recent-branches
@@ -83,3 +83,4 @@ bindkey '^x^r' zaw-history
 source ~/.zsh-git-prompt/zshrc.sh
 PROMPT='%B%m%~%b$(git_super_status) %# '
 
+export GOPATH=$HOME

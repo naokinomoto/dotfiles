@@ -1,3 +1,7 @@
+;; key bind for yosemite
+(setq mac-command-modifier 'super)
+(setq mac-option-modifier 'meta)
+
 ;; 言語設定
 (set-language-environment 'japanese)
 
