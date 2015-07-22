@@ -37,6 +37,7 @@
 (depends-on "ag")
 (depends-on "gist")
 (depends-on "shell-pop")
+(depends-on "gtags" :git "https://github.com/voins/gtags.git")
 
 ;; helm
 (depends-on "helm")
@@ -66,7 +67,8 @@
 (depends-on "slim-mode")
 
 ;; JavaScript
-(depends-on "js3-mode")
+(depends-on "js2-mode")
+(depends-on "ac-js2")
 (depends-on "json-mode")
 
 ;; CoffeeScript
@@ -98,6 +100,9 @@
 ;; Erlang
 ;;(depends-on "erlang-mode")
 
+;; elixir
+(depends-on "elixir-mode")
+
 ;; Haskell
 (depends-on "haskell-mode")
 
@@ -109,6 +114,11 @@
 ;; Common Lisp
 (depends-on "slime")
 ;;(depends-on "scheme-complete")
+
+;; php
+(depends-on "php-mode")
+(depends-on "php-completion")
+
 
 ;; Validation
 (depends-on "flycheck")

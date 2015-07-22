@@ -6,6 +6,7 @@
                ("\\.py$" . "tmpl.py")
                ("\\.pl$" . "tmpl.pl")
                ("\\.rb$" . "tmpl.rb")
+               ("\\.php$" . "tmpl.php")
                ) auto-insert-alist))
 
 (add-hook 'find-file-not-found-hooks 'auto-insert)

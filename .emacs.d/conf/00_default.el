@@ -1,7 +1,3 @@
-;; key bind for yosemite
-(setq mac-command-modifier 'super)
-(setq mac-option-modifier 'meta)
-
 ;; 言語設定
 (set-language-environment 'japanese)
 
@@ -10,21 +6,24 @@
              :family "Ricty" ;; font
              :height 140)  ;; font size
 ;; 日本語をヒラギノ角ゴProNにする
-(set-fontset-font "fontset-default"
-                  'japanese-jisx0208
-                  '("Hiragino Kaku Gothic ProN"))
-(set-fontset-font "fontset-default"
-                  'japanese-jisx0212
-                  '("Hiragino Kaku Gothic ProN"))
-(set-fontset-font "fontset-default"
-                  'japanese-jisx0213-1
-                  '("Hiragino Kaku Gothic ProN"))
-(set-fontset-font "fontset-default"
-                  'japanese-jisx0213-2
-                  '("Hiragino Kaku Gothic ProN"))
-(set-fontset-font "fontset-default"
-                  'katakana-jisx0201
-                  '("Hiragino Kaku Gothic ProN"))
+(if (eq window-system 'ns)
+    (progn
+      (set-fontset-font "fontset-default"
+                        'japanese-jisx0208
+                        '("Hiragino Kaku Gothic ProN"))
+      (set-fontset-font "fontset-default"
+                        'japanese-jisx0212
+                        '("Hiragino Kaku Gothic ProN"))
+      (set-fontset-font "fontset-default"
+                        'japanese-jisx0213-1
+                        '("Hiragino Kaku Gothic ProN"))
+      (set-fontset-font "fontset-default"
+                        'japanese-jisx0213-2
+                        '("Hiragino Kaku Gothic ProN"))
+      (set-fontset-font "fontset-default"
+                        'katakana-jisx0201
+                        '("Hiragino Kaku Gothic ProN"))
+      ))
 
 
 (setq backup-inhibited t)
@@ -71,16 +70,6 @@
       (set-face-background 'mode-line-inactive "gray85")
       ))
 
-;;キーバインド設定
-;;バックスペース
-(global-set-key "\C-h" 'backward-delete-char-untabify)
-
-;;C-x C-gで、指定行に飛ぶ
-(global-set-key "\C-x\C-g" 'goto-line)
-
-;;C-^で、カレントなウィンドウのサイズを一つ拡大
-(global-set-key "\C-x\C-^" 'enlarge-window})
-
 (setq debug-on-error t)
 
 ;;選択領域のハイライト
@@ -103,12 +92,8 @@
 ;; 対応するカッコを色表示する
 (show-paren-mode 1)
 
-(require 'linum)
 (global-linum-mode t)
-(setq linum-format "%4d")
-
-(line-number-mode 1)
-(column-number-mode 1)
+(setq linum-format "%4d ")
 
 ;; 時間表示
 (display-time-mode 1)
@@ -131,23 +116,9 @@
 
 (put 'upcase-region 'disabled nil)
 
-;;bs-showでバッファ選択する。
-(global-set-key "\C-x\C-b" 'bs-show)
-
 ;; 自動バックアップファイルの未作成
 (setq make-backup-files nil)
 (setq auto-save-default nil)
-
-;;フルスクリーン(トグル)
-;(set-frame-parameter nil 'fullscreen 'fullboth)
-(defun my-toggle-frame-size ()
-  (interactive)
-  (if (frame-parameter nil 'fullscreen)
-      (set-frame-parameter nil 'fullscreen nil)
-    (set-frame-parameter nil 'fullscreen 'fullboth)
-    (message "Full-screen changed")
-    ))
-(global-set-key "\C-cm" 'my-toggle-frame-size)
 
 ;; 色つける
 ;; (global-font-lock-mode t)
@@ -181,15 +152,9 @@
 ;; (require 'moccur-edit)
 ;; (setq moccur-split-word t)
 
-(global-set-key "\C-c\g" 'moccur-grep-find)
-
 
 ;; gist
 (require 'gist)
-
-;;find-file-other-frame
-(global-set-key "\M-n" 'find-file-other-frame)
-
 
 ;; 改行マーク、全角スペースマーク、タブマーク
 ;; http://weboo-returns.com/blog/emacs-shows-double-space-and-tab/
@@ -214,4 +179,19 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 
 ;;(require 'w3m)
+
+;; Copy & Paste Sharing OS X
+(defun copy-from-osx ()
+  (let ((tramp-mode nil)
+        (default-directory "~"))
+    (shell-command-to-string "pbpaste")))
+
+(defun paste-to-osx (text &optional push)
+  (let ((process-connection-type nil))
+    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
+
+(setq interprogram-cut-function 'paste-to-osx)
+(setq interprogram-paste-function 'copy-from-osx)
 

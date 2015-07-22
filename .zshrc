@@ -1,16 +1,16 @@
 export ZSH=$HOME/.oh-my-zsh
 
-ZSH_THEME="robbyrussell"
+ZSH_THEME="powerline"
 
-plugins=(git aws brew brew-cask atom bower bundler capistrano cp cpanm docker emoji-clock gem git-extras git-flow git-hubflow git-remote-branch github gitignore go grails gradle heroku history knife knife-ssh npm nvm nyan osx perl pip pod rails rake ruby rbenv python rsync sbt scala ssh-agent sudo vagrant zsh_reload)
+plugins=(aws brew brew-cask atom bower bundler capistrano cp cpanm docker emoji-clock gem go grails gradle heroku history knife knife-ssh npm nvm nyan osx perl pip pod rails rake ruby rbenv python rsync sbt scala ssh-agent sudo vagrant zsh_reload)
 
 source $ZSH/oh-my-zsh.sh
 
-export LANGUAGE=ja_JP.utf8
-export LANG=ja_JP.utf8
-export LC_ALL=ja_JP.utf8
+export LANGUAGE=ja_JP.UTF-8
+export LANG=ja_JP.UTF-8
+export LC_ALL=ja_JP.UTF-8
 
-export PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:$HOME/bin"
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/bin"
 
 ## history
 HISTFILE=~/.zsh_history
@@ -44,8 +44,14 @@ setopt transient_rprompt
 alias ll="ls -alG"
 alias diff="colordiff"
 alias less="less -R"
-alias e="/Applications/Emacs.app/Contents/MacOS/bin/emacsclient"
+alias e="/usr/local/bin/emacsclient"
+alias emacs="/usr/local/bin/emacs"
 alias gcc="gcc-4.8"
+alias bi="bundle install --path=vendor/bundle"
+alias be="bundle exec"
+
+export EMACS="/usr/local/bin/emacs"
+export EDITOR="/usr/local/bin/emacsclient"
 
 # cask
 export PATH="$HOME/.cask/bin:$PATH"
@@ -55,7 +61,7 @@ export PATH="$HOME/.cask/bin:$PATH"
 eval "$(rbenv init -)"
 
 # node.js
-[ -s "/usr/local/nvm/nvm.sh" ] && . "/usr/local/nvm/nvm.sh"
+[ -s "~/.nvm/nvm.sh" ] && . "~/.nvm/nvm.sh"
 
 # plenv
 #export PATH="$HOME/.plenv/bin:$PATH"
@@ -73,14 +79,41 @@ zstyle ':chpwd:*' recent-dirs-default yes
 zstyle ':completion:*' recent-dirs-insert both
 
 # zaw
-source $HOME/.zaw/zaw.zsh
-zstyle ':filter-select' case-insensitive yes
-bindkey '^xf' zaw-cdr
-bindkey '^x^b' zaw-git-recent-branches
-bindkey '^x^f' zaw-git-files
-bindkey '^x^r' zaw-history
+#source $HOME/.zaw/zaw.zsh
+#zstyle ':filter-select' case-insensitive yes
+#bindkey '^xf' zaw-cdr
+#bindkey '^x^b' zaw-git-recent-branches
+#bindkey '^x^f' zaw-git-files
+#bindkey '^x^r' zaw-history
 
-source ~/.zsh-git-prompt/zshrc.sh
-PROMPT='%B%m%~%b$(git_super_status) %# '
+#source ~/.zsh-git-prompt/zshrc.sh
+#PROMPT='%B%m%~%b$(git_super_status) %# '
 
 export GOPATH=$HOME
+
+# powerline
+POWERLINE_HIDE_HOST_NAME="true"
+POWERLINE_HIDE_GIT_PROMPT_STATUS="true"
+POWERLINE_SHOW_GIT_ON_RIGHT="true"
+
+export PATH=$PATH:~/Library/Python/2.7/bin
+powerline-daemon -q
+. ~/Library/Python/2.7/lib/python/site-packages/powerline/bindings/zsh/powerline.zsh
+
+
+function peco-src() {
+  local selected_dir=$(ghq list --full-path | peco --query "$LBUFFER")
+  if [ -n "$selected_dir" ];then
+    BUFFER="cd ${selected_dir}"
+    zle accept-line
+  fi
+  zle clear-screen
+}
+
+zle -N peco-src
+bindkey '^]' peco-src
+
+export DOCKER_TLS_VERIFY=1
+export DOCKER_HOST=tcp://192.168.59.103:2376
+export DOCKER_CERT_PATH=~/.boot2docker/certs/boot2docker-vm
+nvm use iojs

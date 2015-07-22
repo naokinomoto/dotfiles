@@ -1,18 +1,12 @@
-(setq js3-mirror-mode t)
-(autoload 'js3-mode "js3" nil t)
-(add-to-list 'auto-mode-alist '("\\.js$" . js3-mode))
-(add-hook 'js3-mode-hook
-          (lambda ()
-            (setq js3-indent-level 2)
-            (setq js3-mode-dev-mode-p t)
-            (setq js3-auto-indent-p t)
-            (setq js3-enter-indents-newline t)
-            (setq js3-indent-on-enter-key t)
-            (setq js3-consistent-level-indent-inner-bracket t)
-            (when (require 'auto-complete nil t)
-              (make-variable-buffer-local 'ac-sources)
-              (add-to-list 'ac-sources 'ac-source-yasnippet)
-              (auto-complete-mode t))))
+;; JavaScript
+
+(autoload 'js2-mode "js2-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(add-hook 'js2-mode-hook
+          '(lambda ()
+             (setq js2-basic-offset 2)))
+(add-hook 'js-mode-hook 'js2-minor-mode)
+(add-hook 'js2-mode-hook 'ac-js2-mode)
 
 
 ;; JSON
@@ -20,5 +14,6 @@
 (add-to-list 'auto-mode-alist '("\\.tss$" . json-mode))
 (add-hook 'json-mode-hook 'electric-pair-mode)
 (add-hook 'json-mode-hook '(lambda ()
-                 (setq js-indent-level 2)
-                 ))
+                             (setq js-indent-level 2)))
+
+

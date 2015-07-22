@@ -1,11 +1,3 @@
-;; Zen Coding Mode
-;; http://www.goodpic.com/mt/archives2/2010/02/emacs_zencoding.html
-;; (require 'zencoding-mode)
-;; (add-hook 'sgml-mode-hook 'zencoding-mode)
-;; (add-hook 'html-mode-hook 'zencoding-mode)
-;; (add-hook 'text-mode-hook 'zencoding-mode)
-;; (define-key zencoding-mode-keymap "\C-z" 'zencoding-expand-line)
-
 (require 'web-mode)
 
 ;;; emacs 23以下の互換
@@ -19,6 +11,13 @@
 (add-to-list 'auto-mode-alist '("\\.as[cp]x$"   . web-mode))
 (add-to-list 'auto-mode-alist '("\\.erb$"       . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?$"     . web-mode))
+(add-to-list 'auto-mode-alist '("\\.php$"     . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
+(defadvice web-mode-highlight-part (around tweak-jsx activate)
+  (if (equal web-mode-content-type "jsx")
+      (let ((web-mode-enable-part-face nil))
+        ad-do-it)
+    ad-do-it))
 
 ;;; インデント数
 (defun web-mode-hook ()
