@@ -39,6 +39,10 @@
 (depends-on "shell-pop")
 (depends-on "gtags" :git "https://github.com/voins/gtags.git")
 
+(depends-on "atom-dark-theme")
+(depends-on "neotree")
+(depends-on "company")
+
 ;; helm
 (depends-on "helm")
 (depends-on "helm-swoop")
@@ -102,6 +106,7 @@
 
 ;; elixir
 (depends-on "elixir-mode")
+(depends-on "alchemist")
 
 ;; Haskell
 (depends-on "haskell-mode")
@@ -133,6 +138,9 @@
 
 ;; less
 (depends-on "less-css-mode")
+
+;; scss
+(depends-on "scss-mode")
 
 ;; markdown
 (depends-on "markdown-mode")

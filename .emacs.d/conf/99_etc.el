@@ -54,14 +54,17 @@
 (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
 
-(color-theme-initialize)
-(color-theme-ld-dark)
+;; theme
+(load-theme 'atom-dark t)
+
+;(color-theme-initialize)
+;(color-theme-ld-dark)
 ;(color-theme-dark-laptop)
 
 ;; ;; elscreen
 ;; ;; https://github.com/shosti/elscreen
-(setq elscreen-prefix-key "\C-t")
-(elscreen-start)
+;(setq elscreen-prefix-key "\C-t")
+;(elscreen-start)
 
 
 ;; migemo
@@ -95,7 +98,7 @@
 (add-to-list 'load-path "~/.emacs.d/elisp/skk")
 (require 'skk-autoloads)
 (global-set-key (kbd "C-x C-m") 'skk-mode)
-;(setq skk-large-jisyo "~/.emacs.d/skk/SKK-JISYO.L")
+(setq skk-large-jisyo "~/.emacs.d/skk/SKK-JISYO.L")
 (setq skk-tut-file "~/.emacs.d/etc/skk/SKK.tut")
 
 ;; direx
@@ -105,3 +108,11 @@
       popwin:special-display-config)
 (global-set-key (kbd "C-c C-j") 'direx:jump-to-directory-other-window)
 (global-set-key (kbd "C-c C-p") 'direx-project:jump-to-project-root-other-window)
+
+
+;; neotree
+(require 'neotree)
+(global-set-key [f8] 'neotree-toggle)
+
+
+
