@@ -1,4 +1,4 @@
-;; elixir
+;;; elixir
 
 (require 'elixir-mode)
 
@@ -11,4 +11,15 @@
 (setq alchemist-compile-command "/usr/local/bin/elixirc")
 
 (setq alchemist-test-status-modeline nil)
+
+(add-hook 'elixir-mode-hook 'ac-alchemist-setup)
+(eval-after-load "alchemist"
+  #'(progn
+      (eval-after-load "elixir-mode"
+        #'(progn
+            (define-key alchemist-mode-map (kbd "C-x C-e") 'alchemist-iex-send-last-sexp)
+            (define-key alchemist-mode-map (kbd "C-M-x") 'alchemist-iex-send-region)
+            ))))
+
+
 

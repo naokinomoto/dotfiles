@@ -3,7 +3,7 @@ S.bind('return:alt', function (w) {
 });
 
 S.bind('i:alt', function (w) {
-  w.doOperation(S.operation('focus', { app: 'iTerm' }));
+  w.doOperation(S.operation('focus', { app: 'iTerm2' }));
 });
 
 S.bind('c:alt', function (w) {
@@ -12,4 +12,8 @@ S.bind('c:alt', function (w) {
 
 S.bind('a:alt', function (w) {
   w.doOperation(S.operation('focus', { app: 'Atom' }));
+});
+
+S.bind('k:alt', function (w) {
+  w.doOperation(S.operation('focus', { app: 'Keynote' }));
 });

@@ -20,10 +20,15 @@
     ad-do-it))
 
 ;;; インデント数
-(defun web-mode-hook ()
+(defun my-web-mode-hook ()
   "Hooks for Web mode."
+  (setq web-mode-attr-indent-offset nil)
   (setq web-mode-markup-indent-offset 4)
   (setq web-mode-css-indent-offset 4)
-  (setq web-mode-code-indent-offset 4))
+  (setq web-mode-code-indent-offset 4)
+  (setq web-mode-sql-indent-offset 4)
+  (setq indent-tabs-mode nil)
+  (setq tab-width 4))
+(add-hook 'web-mode-hook 'my-web-mode-hook)
 
-(add-hook 'web-mode-hook 'web-mode-hook)
+

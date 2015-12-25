@@ -107,6 +107,7 @@
 ;; elixir
 (depends-on "elixir-mode")
 (depends-on "alchemist")
+(depends-on "ac-alchemist" :git "https://github.com/syohex/emacs-ac-alchemist")
 
 ;; Haskell
 (depends-on "haskell-mode")
@@ -146,6 +147,8 @@
 (depends-on "markdown-mode")
 (depends-on "markdown-mode+")
 
+;; terraform
+(depends-on "terraform-mode")
 
 ;;(depends-on "ipa")
 ;;(depends-on "multiverse")

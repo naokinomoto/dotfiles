@@ -48,32 +48,34 @@
 
 ;; 背景色
 ;; http://www.kutsulog.com/?p=288
-(if window-system
-    (progn
-      ;; 文字の色を設定します。
-      (add-to-list 'default-frame-alist '(foreground-color . "LightGray"))
-      ;; 背景色を設定します。
-      (add-to-list 'default-frame-alist '(background-color . "black"))
-      ;; カーソルの色を設定します。
-      (add-to-list 'default-frame-alist '(cursor-color . "SlateBlue2"))
-      ;; マウスポインタの色を設定します。
-      (add-to-list 'default-frame-alist '(mouse-color . "SlateBlue2"))
-      ;; モードラインの文字の色を設定します。
-      (set-face-foreground 'mode-line "white")
-      ;; モードラインの背景色を設定します。
-      (set-face-background 'mode-line "purple")
-      ;; 選択中のリージョンの色を設定します。
-      ;(set-face-background 'region "LightSteelBlue1")
-      ;; モードライン（アクティブでないバッファ）の文字色を設定します。
-      (set-face-foreground 'mode-line-inactive "gray30")
-      ;; モードライン（アクティブでないバッファ）の背景色を設定します。
-      (set-face-background 'mode-line-inactive "gray85")
-      ))
+;; (if window-system
+;;     (progn
+;;       ;; 文字の色を設定します。
+;;       (add-to-list 'default-frame-alist '(foreground-color . "LightGray"))
+;;       ;; 背景色を設定します。
+;;       (add-to-list 'default-frame-alist '(background-color . "black"))
+;;       ;; カーソルの色を設定します。
+;;       (add-to-list 'default-frame-alist '(cursor-color . "SlateBlue2"))
+;;       ;; マウスポインタの色を設定します。
+;;       (add-to-list 'default-frame-alist '(mouse-color . "SlateBlue2"))
+;;       ;; モードラインの文字の色を設定します。
+;;       (set-face-foreground 'mode-line "white")
+;;       ;; モードラインの背景色を設定します。
+;;       (set-face-background 'mode-line "purple")
+;;       ;; 選択中のリージョンの色を設定します。
+;;       ;(set-face-background 'region "LightSteelBlue1")
+;;       ;; モードライン（アクティブでないバッファ）の文字色を設定します。
+;;       (set-face-foreground 'mode-line-inactive "gray30")
+;;       ;; モードライン（アクティブでないバッファ）の背景色を設定します。
+;;       (set-face-background 'mode-line-inactive "gray85")
+;;       ))
+
+;;選択領域のハイライト
+;;(transient-mark-mode 1)
+
 
 (setq debug-on-error t)
 
-;;選択領域のハイライト
-(transient-mark-mode 1)
 
 ;;矩形領域の選択
 ;(autoload 'sense-region-on "sense-region"
@@ -194,4 +196,5 @@
 
 (setq interprogram-cut-function 'paste-to-osx)
 (setq interprogram-paste-function 'copy-from-osx)
+
 

@@ -31,12 +31,12 @@
              (throw 'end-flag t)))))))
 
 
-(define-key global-map "\C-q" (make-sparse-keymap))
-(global-set-key "\C-q\C-q" 'quoted-insert)
-(global-set-key "\C-q\C-r" 'window-resizer)
-(global-set-key "\C-q\C-f" 'windmove-right)
-(global-set-key "\C-q\C-b" 'windmove-left)
-(global-set-key "\C-q\C-p" 'windmove-up)
-(global-set-key "\C-q\C-n" 'windmove-downo)
+(define-key global-map "\C-c" (make-sparse-keymap))
+(global-set-key "\C-c\C-q" 'quoted-insert)
+(global-set-key "\C-c\C-r" 'window-resizer)
+(global-set-key "\C-c\C-f" 'windmove-right)
+(global-set-key "\C-c\C-b" 'windmove-left)
+(global-set-key "\C-c\C-p" 'windmove-up)
+(global-set-key "\C-c\C-n" 'windmove-down)
 
 

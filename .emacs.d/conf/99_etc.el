@@ -57,9 +57,9 @@
 ;; theme
 (load-theme 'atom-dark t)
 
-;(color-theme-initialize)
-;(color-theme-ld-dark)
-;(color-theme-dark-laptop)
+(color-theme-initialize)
+(color-theme-ld-dark)
+(color-theme-dark-laptop)
 
 ;; ;; elscreen
 ;; ;; https://github.com/shosti/elscreen
@@ -82,24 +82,25 @@
 ;; cua-mode
 (cua-mode t)
 (setq cua-enable-cua-keys nil)
-
+(define-key global-map (kbd "C-x SPC") 'cua-set-rectangle-mark)
 
 ;; 鬼軍曹.el
 ;; https://github.com/k1LoW/emacs-drill-instructor/wiki
-(require 'drill-instructor)
-(setq drill-instructor-global t)
+;;(require 'drill-instructor)
+;;(setq drill-instructor-global t)
 
 
 ;; ddskk
-;; dired-xとぶつかっているキーをskkにバインド
 
-(when (require 'dired-x nil t)
-  (global-set-key "\C-x\C-j" 'skk-mode))
-(add-to-list 'load-path "~/.emacs.d/elisp/skk")
+;; load-path 追加
+(let ((default-directory (expand-file-name "~/.emacs.d/site-lisp")))
+  (add-to-list 'load-path default-directory)
+  (if (fboundp 'normal-top-level-add-subdirs-to-load-path)
+      (normal-top-level-add-subdirs-to-load-path)))
+
+;; skkの設定
 (require 'skk-autoloads)
-(global-set-key (kbd "C-x C-m") 'skk-mode)
-(setq skk-large-jisyo "~/.emacs.d/skk/SKK-JISYO.L")
-(setq skk-tut-file "~/.emacs.d/etc/skk/SKK.tut")
+(global-set-key (kbd "C-x C-j") 'skk-mode)
 
 ;; direx
 ;; http://cx4a.blogspot.jp/2011/12/popwineldirexel.html
@@ -109,10 +110,8 @@
 (global-set-key (kbd "C-c C-j") 'direx:jump-to-directory-other-window)
 (global-set-key (kbd "C-c C-p") 'direx-project:jump-to-project-root-other-window)
 
-
 ;; neotree
 (require 'neotree)
 (global-set-key [f8] 'neotree-toggle)
-
 
 
