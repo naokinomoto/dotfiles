@@ -300,6 +300,10 @@
   :ensure t
   :defer t)
 
+;; flycheck
+(use-package flycheck
+  :ensure t
+  :defer t)
 
 ;; elisp
 (use-package lispxmp
@@ -362,6 +366,11 @@
                           (imenu-add-menubar-index))))
 
 ;; rust
+;; flycheck
+(use-package flycheck-rust
+  :ensure t
+  :defer t)
+
 (use-package racer
   :ensure t
   :defer t)
