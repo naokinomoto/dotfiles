@@ -15,6 +15,10 @@
 (when (file-exists-p custom-file)
   (load custom-file))
 
+
+(when (not (package-installed-p 'use-package))
+  (package-refresh-contents)
+  (package-install 'use-package))
 (require 'use-package)
 
 (setq debug-on-error t)
