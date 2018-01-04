@@ -15,7 +15,6 @@
 (when (file-exists-p custom-file)
   (load custom-file))
 
-
 (when (not (package-installed-p 'use-package))
   (package-refresh-contents)
   (package-install 'use-package))
@@ -29,65 +28,48 @@
 
 ;; タイトルバーにファイル名を表示する
 (setq frame-title-format (format "emacs@%s : %%f" (system-name)))
-
 ;;選択領域のハイライト
 (transient-mark-mode 1)
-
 ;; メニューバーを消す
 (menu-bar-mode -1)
-
 ;; ツールバー（アイコン）を消す
 (tool-bar-mode 0)
-
 (column-number-mode t)
-
 ;; 1行ずつスクロール
 (setq scroll-step 1)
-
 ;; 対応するカッコを色表示する
 (show-paren-mode 1)
-
+;; 行表示
 (global-linum-mode t)
 (setq linum-format "%4d ")
-
 ;; 時間表示
 (display-time-mode 1)
-
 ;; ヴィジュアルベル無効
 (setq visible-bell nil)
-
 ;; ビープ音無効
 (setq ring-bell-function '(lambda ()))
-
 ;;インデントはスペースにする
 (setq-default indent-tabs-mode nil)
-
 ;;インデント幅
 (setq-default c-basic-offset 2)
-
 ;;タブ幅
 (setq-default default-tab-width 2)
 (setq-default tab-width 2)
-
 ;; 自動バックアップファイルの未作成
 (setq make-backup-files nil)
 (setq auto-save-default nil)
 (setq backup-inhibited t)
-
 ;; 色つける
 (global-font-lock-mode t)
 (setq-default transient-mark-mode t)
-
 ;; utf-8
 (prefer-coding-system 'utf-8)
-
 ;; wdired
 (use-package wdired
   :ensure t
   :defer t
   :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
   )
-
 ;; 改行マーク/全角スペースマーク/タブマーク
 (use-package whitespace
   :ensure t
@@ -109,10 +91,8 @@
 
 ;; 行末の空白をめだたせる M-x delete-trailing-whitespace で削除出来る
 (when (boundp 'show-trailing-whitespace) (setq-default show-trailing-whitespace t))
-
 ;; yes/no -> y/n
 (fset 'yes-or-no-p 'y-or-n-p)
-
 ;; tramp
 (use-package tramp
   :ensure t
@@ -121,9 +101,13 @@
   (progn
     (setq tramp-default-method "ssh")))
 
+;; esup
+(use-package esup
+  :ensure t
+  :defer t)
+
 ;; recentf
 (recentf-mode t)
-
 ;; open-junk-file
 (defun open-junk-file ()
   (interactive)
@@ -138,6 +122,7 @@
 
 (find-function-setup-keys)
 
+;; popwin
 (use-package popwin
   :ensure t
   :defer t
@@ -154,7 +139,6 @@
   :config
   (unless (server-running-p)
     (server-start)))
-
 
 ;; migemo
 ;; https://gist.github.com/4176883
@@ -218,12 +202,10 @@
 
 ;;C-x C-gで、指定行に飛ぶ
 (global-set-key "\C-x\C-g" 'goto-line)
-
 ;;bs-showでバッファ選択する。
 (global-set-key "\C-x\C-b" 'bs-show)
 
 (global-set-key "\C-c\g" 'moccur-grep-find)
-
 (global-set-key "\C-j" 'eval-print-last-sexp)
 
 ;; key bind for yosemite
@@ -451,7 +433,25 @@
          (typescript-mode . prettier-js-mode)
          (web-mode . prettier-js-mode)))
 
+
 ;; web-mode
+(defun my-web-mode-hook ()
+  (let ((i 2))
+    (cond ((string-equal "tsx" (file-name-extension buffer-file-name))
+           (setq i 4)
+           (setq prettier-js-args '(
+                                    "--tab-width" "4"
+                                    "--single-quote" "true"
+                                    "--no-semi" "false"
+                                    ))))
+    (setq web-mode-attr-indent-offset nil)
+    (setq web-mode-markup-indent-offset i)
+    (setq web-mode-css-indent-offset i)
+    (setq web-mode-code-indent-offset i)
+    (setq web-mode-sql-indent-offset i)
+    (setq indent-tabs-mode nil)
+    (setq tab-width i)))
+
 (use-package web-mode
   :ensure t
   :defer t
@@ -463,14 +463,7 @@
          ("\\.php$"       . web-mode)
          ("\\.jsx$"       . web-mode)
          ("\\.tsx$"       . web-mode))
-  :hook ((web-mode . (lambda ()
-                       (setq web-mode-attr-indent-offset nil)
-                       (setq web-mode-markup-indent-offset 2)
-                       (setq web-mode-css-indent-offset 2)
-                       (setq web-mode-code-indent-offset 2)
-                       (setq web-mode-sql-indent-offset 2)
-                       (setq indent-tabs-mode nil)
-                       (setq tab-width 2))))
+  :hook (web-mode . my-web-mode-hook)
   :config
   (progn
     (defadvice web-mode-highlight-part (around tweak-jsx activate)
