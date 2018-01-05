@@ -208,10 +208,6 @@
 (global-set-key "\C-c\g" 'moccur-grep-find)
 (global-set-key "\C-j" 'eval-print-last-sexp)
 
-;; key bind for yosemite
-(setq mac-command-modifier 'super)
-(setq mac-option-modifier 'meta)
-
 ;; window resizer
 ;; http://d.hatena.ne.jp/mooz/20100119/p1
 (defun window-resizer ()
@@ -549,7 +545,28 @@
             ("Todo" ?t "* TODO %?\n  %i\n  %a" nil "Tasks")))))
 
 ;;;;;;;;
-;; misc
+;; TODO
 ;; tags
 ;; flymake
 ;; yasnippet
+
+;; for mac
+(when (eq system-type 'darwin)
+  ;; key bind
+  (setq mac-command-modifier 'super)
+  (setq mac-option-modifier 'meta)
+
+  ;; copy & paste sharing OS
+  (defun copy-from-osx ()
+    (let ((tramp-mode nil)
+          (default-directory "~"))
+      (shell-command-to-string "pbpaste")))
+
+  (defun paste-to-osx (text &optional push)
+    (let ((process-connection-type nil))
+      (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+        (process-send-string proc text)
+        (process-send-eof proc))))
+
+  (setq interprogram-cut-function 'paste-to-osx)
+  (setq interprogram-paste-function 'copy-from-osx))
