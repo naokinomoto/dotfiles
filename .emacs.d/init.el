@@ -22,6 +22,11 @@
 
 (setq debug-on-error t)
 
+(set-language-environment 'japanese)
+(prefer-coding-system 'utf-8)
+(setq coding-system-for-read 'utf-8)
+(setq coding-system-for-write 'utf-8)
+
 (use-package cl
   :ensure t
   :defer t)
@@ -62,8 +67,6 @@
 ;; 色つける
 (global-font-lock-mode t)
 (setq-default transient-mark-mode t)
-;; utf-8
-(prefer-coding-system 'utf-8)
 ;; wdired
 (use-package wdired
   :ensure t
@@ -247,7 +250,7 @@
 (global-set-key "\C-q\C-n" 'windmove-down)
 
 ;; Font
-(set-language-environment 'japanese)
+
 (set-face-attribute 'default nil
              :family "Ricty"
              :height 150)
