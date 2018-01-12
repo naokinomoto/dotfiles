@@ -133,16 +133,6 @@
   (progn
    (setq display-buffer-function 'popwin:display-buffer)))
 
-;; emacs server
-(use-package server
-  :ensure t
-  :defer t
-  :init
-  (server-mode 1)
-  :config
-  (unless (server-running-p)
-    (server-start)))
-
 ;; migemo
 ;; https://gist.github.com/4176883
 (use-package migemo
@@ -515,7 +505,38 @@
 ;; markdown
 (use-package markdown-mode
   :ensure t
-  :defer t)
+  :defer t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (progn
+          (setq
+           markdown-command "/usr/local/bin/multimarkdown"
+           markdown-css-paths '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
+                                "http://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css")
+           markdown-xhtml-header-content "
+<meta name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit=no'>
+<style>
+body {
+  box-sizing: border-box;
+  max-width: 740px;
+  width: 100%;
+  margin: 40px auto;
+  padding: 0 10px;
+}
+</style>
+<script src='http://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.classList.add('markdown-body');
+  document.querySelectorAll('pre[lang] > code').forEach((code) => {
+    code.classList.add(code.parentElement.lang);
+    hljs.highlightBlock(code);
+  });
+});
+</script>
+")))
 
 ;; org
 (use-package org
@@ -573,3 +594,21 @@
 
   (setq interprogram-cut-function 'paste-to-osx)
   (setq interprogram-paste-function 'copy-from-osx))
+
+;; theme
+(when (eq window-system 'mac)
+  (use-package atom-one-dark-theme
+    :ensure t)
+  (load-theme 'atom-one-dark t))
+
+;; emacs server
+(when (eq window-system 'nil)
+  (use-package server
+  :ensure t
+  :defer t
+  :init
+  (server-mode 1)
+  :config
+  (progn
+    (unless (server-running-p)
+    (server-start)))))
