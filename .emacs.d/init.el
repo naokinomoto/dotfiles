@@ -269,7 +269,18 @@
 ;; company
 (use-package company
   :ensure t
-  :defer t)
+  :defer t
+  :bind
+  (:map company-active-map
+        ("C-n" . company-select-next)
+        ("C-p" . company-select-previous)
+        ("C-s" . company-filter-candidates)
+        ("C-i" . company-filter-selection))
+  (:map company-search-map
+        ("C-n" . company-select-next)
+        ("C-p" . company-select-previous))
+  (:map emacs-lisp-mode-map
+        ("C-M-i" . company-complete)))
 
 ;; flycheck
 (use-package flycheck
@@ -367,8 +378,12 @@
 
 ;; python
 
-;; go
+;; golang
 (use-package go-autocomplete
+  :ensure t
+  :defer t)
+
+(use-package company-go
   :ensure t
   :defer t)
 
@@ -376,8 +391,16 @@
   :ensure t
   :defer t
   :hook ((before-save . gofmt-before-save)
+         (go-mode . flycheck-mode)
          (go-mode . (lambda ()
-                      (local-set-key (kbd "M-.") 'godef-jump))))
+                      (local-set-key (kbd "M-.") 'godef-jump)
+                      (set (make-local-variable 'company-backends) '(company-go))
+                      (require 'auto-complete-config)
+                      (ac-config-default)
+                      (company-mode)
+                      (setq indent-tabs-mode nil)
+                      (setq c-basic-offset 4)
+                      (setq tab-width 4))))
   :init
   (progn
     (add-to-list 'exec-path (expand-file-name "~/bin"))))
