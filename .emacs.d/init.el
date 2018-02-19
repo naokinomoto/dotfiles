@@ -1,4 +1,6 @@
-(setq gc-cons-threshold (* 512 1024 1024))
+(setq gc-cons-threshold (* 1024 1024 1024))
+(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold (* 8 1024 1024))))
+(setq garbage-collection-messages t)
 
 (add-to-list 'exec-path "/usr/local/bin")
 (add-to-list 'exec-path "~/bin")
@@ -71,19 +73,20 @@
   :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
   )
 ;; 改行マーク/全角スペースマーク/タブマーク
+(setq whitespace-style
+      '(tabs tab-mark spaces space-mark face))
+(setq whitespace-space-regexp "\\(\x3000+\\)")
+(setq whitespace-display-mappings
+      '((space-mark ?\x3000 [?\□])
+        (tab-mark   ?\t   [?\xBB ?\t])
+        ))
+
 (use-package whitespace
   :ensure t
   :defer t
   :config
   (progn
     (global-whitespace-mode 1)
-    (setq whitespace-style
-          '(tabs tab-mark spaces space-mark face))
-    (setq whitespace-space-regexp "\\(\x3000+\\)")
-    (setq whitespace-display-mappings
-          '((space-mark ?\x3000 [?\□])
-            (tab-mark   ?\t   [?\xBB ?\t])
-            ))
     (set-face-foreground 'whitespace-space "#555555")
     (set-face-background 'whitespace-space nil)
     (set-face-foreground 'whitespace-tab "#555555")
@@ -259,7 +262,7 @@
 ;; helm
 (use-package helm
   :ensure t
-  :diminish helm-mode "h"
+  ; :diminish helm-mode "h"
   :bind
   (("M-x"     . helm-M-x)
    ("C-c f"   . helm-mini)
@@ -296,7 +299,7 @@
 (use-package paredit
   :ensure t
   :defer t
-  :diminish paredit-mode
+  ; :diminish paredit-mode
   :bind (:map paredit-mode-map ("C-j" . eval-print-last-sexp))
   :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode) . enable-paredit-mode))
 
@@ -475,7 +478,6 @@
 ;; supercollider
 (use-package sclang
   :load-path "elisp/scel"
-  :defer t
   :config
   (progn
     (custom-set-variables
@@ -483,13 +485,21 @@
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
 
 ;; tidal
+;; (use-package tidal
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (progn
+;;     (setq tidal-interpreter "~/.local/bin/stack")
+;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
+
 (use-package tidal
-  :ensure t
-  :defer t
+  :load-path "elisp/tidal"
   :config
   (progn
     (setq tidal-interpreter "~/.local/bin/stack")
     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
+
 
 ;; faust
 (use-package faust-mode
@@ -519,34 +529,34 @@
   :defer t)
 
 ;; org
-(use-package org
-  :ensure t
-  :defer t
-  :commands (org-remember-insinuate)
-  :mode ("\\.org$" . org-mode)
-  :bind (("\C-cl" . org-store-link)
-         ("\C-ca" . org-agenda)
-         ("\C-cr" . org-remember))
-  :hook (org-mode . turn-on-font-lock)
-  :config
-  (progn
-    ;; 見出しの余分な*を消す
-    (setq org-hide-leading-stars t)
-    ;; org-default-notes-file のディレクトリ
-    (setq org-directory "~/Dropbox/org/")
-    ;; org-default-notes-file のファイル名
-    (setq org-default-notes-file "notes.org")
-    ;; TODO 状態
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
-    ;; DONE の時刻を記録
-    (setq org-log-done 'time)
-    ;; org-remember を使う
-    (org-remember-insinuate)
-    ;; org-remember のテンプレート
-    (setq org-remember-templates
-          '(("Note" ?n "* %?\n  %i\n  %a" nil "Tasks")
-            ("Todo" ?t "* TODO %?\n  %i\n  %a" nil "Tasks")))))
+;; (use-package org
+;;   :ensure t
+;;   :defer t
+;;   :commands (org-remember-insinuate)
+;;   :mode ("\\.org$" . org-mode)
+;;   :bind (("\C-cl" . org-store-link)
+;;          ("\C-ca" . org-agenda)
+;;          ("\C-cr" . org-remember))
+;;   :hook (org-mode . turn-on-font-lock)
+;;   :config
+;;   (progn
+;;     ;; 見出しの余分な*を消す
+;;     (setq org-hide-leading-stars t)
+;;     ;; org-default-notes-file のディレクトリ
+;;     (setq org-directory "~/Dropbox/org/")
+;;     ;; org-default-notes-file のファイル名
+;;     (setq org-default-notes-file "notes.org")
+;;     ;; TODO 状態
+;;     (setq org-todo-keywords
+;;           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+;;     ;; DONE の時刻を記録
+;;     (setq org-log-done 'time)
+;;     ;; org-remember を使う
+;;     (org-remember-insinuate)
+;;     ;; org-remember のテンプレート
+;;     (setq org-remember-templates
+;;           '(("Note" ?n "* %?\n  %i\n  %a" nil "Tasks")
+;;             ("Todo" ?t "* TODO %?\n  %i\n  %a" nil "Tasks")))))
 
 ;;;;;;;;
 ;; misc
