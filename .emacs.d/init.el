@@ -301,9 +301,27 @@
   :defer t
   ; :diminish paredit-mode
   :bind (:map paredit-mode-map ("C-j" . eval-print-last-sexp))
-  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode) . enable-paredit-mode))
+  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode scheme-mode) . enable-paredit-mode))
 
-;; ruby
+;; Scheme / Gauche
+(setq process-coding-system-alist
+      (cons '("gosh" utf-8 . utf-8) process-coding-system-alist))
+
+(setq scheme-program-name "gosh -i")
+(autoload 'scheme-mode "cmuscheme" "Major mode for Scheme." t)
+(autoload 'run-scheme "cmuscheme" "Run ad inferior Scheme process." t)
+
+(defun scheme-other-window ()
+  "Run scheme on other window"
+  (interactive)
+  (switch-to-buffer-other-window
+   (get-buffer-create "*scheme*"))
+  (run-scheme scheme-program-name))
+
+(define-key global-map
+  "\C-cs" 'scheme-other-window)
+
+;; Ruby
 ;; TODO: basic configure only
 (use-package ruby-mode
   :ensure t
