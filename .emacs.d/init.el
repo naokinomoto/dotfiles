@@ -301,9 +301,27 @@
   :defer t
   ; :diminish paredit-mode
   :bind (:map paredit-mode-map ("C-j" . eval-print-last-sexp))
-  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode) . enable-paredit-mode))
+  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode scheme-mode) . enable-paredit-mode))
 
-;; ruby
+;; Scheme / Gauche
+(setq process-coding-system-alist
+      (cons '("gosh" utf-8 . utf-8) process-coding-system-alist))
+
+(setq scheme-program-name "gosh -i")
+(autoload 'scheme-mode "cmuscheme" "Major mode for Scheme." t)
+(autoload 'run-scheme "cmuscheme" "Run ad inferior Scheme process." t)
+
+(defun scheme-other-window ()
+  "Run scheme on other window"
+  (interactive)
+  (switch-to-buffer-other-window
+   (get-buffer-create "*scheme*"))
+  (run-scheme scheme-program-name))
+
+(define-key global-map
+  "\C-cs" 'scheme-other-window)
+
+;; Ruby
 ;; TODO: basic configure only
 (use-package ruby-mode
   :ensure t
@@ -370,8 +388,8 @@
          (racer-mode . eldoc-mode)
          (racer-mode . (lambda ()
                          (company-mode)
-                         (set (make-variable-buffer-local 'company-idle-delay) 0.1)
-                         (set (make-variable-buffer-local 'company-minimum-prefix-length) 0))))
+                         (set (make-variable-buffer-local 'company-idle-delay) 0.3)
+                         (set (make-variable-buffer-local 'company-minimum-prefix-length) 1))))
   :init
   (progn
     (add-to-list 'exec-path (expand-file-name "~/.cargo/bin")))
@@ -415,7 +433,7 @@
   :mode "\\.js$"
   :hook ((js2-mode . (lambda ()
                        (setq js2-basic-offset 2)))
-         (js2-mode . ac-js2-mode)
+         ;(js2-mode . ac-js2-mode)
          (js-mode . js2-minor-mode)))
 
 (use-package json-mode
@@ -441,12 +459,22 @@
           (eldoc-mode t)
           (company-mode-on))))
 
+(defun enable-minor-mode (my-pair)
+  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  (if (buffer-file-name)
+      (if (string-match (car my-pair) buffer-file-name)
+      (funcall (cdr my-pair)))))
+
 (use-package prettier-js
   :ensure t
   :defer t
   :hook ((js2-mode . prettier-js-mode)
          (typescript-mode . prettier-js-mode)
-         (web-mode . prettier-js-mode)))
+         (web-mode . (lambda ()
+                       (enable-minor-mode
+                        '("\\.jsx?\\'" . prettier-js-mode))
+                       (enable-minor-mode
+                        '("\\.tsx?\\'" . prettier-js-mode))))))
 
 
 ;; web-mode
@@ -635,8 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (load-theme 'atom-one-dark t))
 
 ;; emacs server
-(when (eq window-system 'nil)
-  (use-package server
+(use-package server
   :ensure t
   :defer t
   :init
@@ -644,4 +671,4 @@ document.addEventListener('DOMContentLoaded', () => {
   :config
   (progn
     (unless (server-running-p)
-    (server-start)))))
+    (server-start))))
