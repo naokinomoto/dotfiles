@@ -39,6 +39,8 @@
 (transient-mark-mode 1)
 ;; メニューバーを消す
 (menu-bar-mode -1)
+;; スクロールバーを消す
+(scroll-bar-mode -1)
 ;; ツールバー（アイコン）を消す
 (tool-bar-mode 0)
 (column-number-mode t)
@@ -99,6 +101,9 @@
 (when (boundp 'show-trailing-whitespace) (setq-default show-trailing-whitespace t))
 ;; yes/no -> y/n
 (fset 'yes-or-no-p 'y-or-n-p)
+
+(define-key isearch-mode-map (kbd "C-h") 'isearch-del-char)
+
 ;; tramp
 (use-package tramp
   :ensure t
@@ -134,7 +139,7 @@
   :defer t
   :init
   (progn
-   (setq display-buffer-function 'popwin:display-buffer)))
+   (setq dipslay-buffer-function 'popwin:display-buffer)))
 
 ;; migemo
 ;; https://gist.github.com/4176883
@@ -246,7 +251,7 @@
 
 (set-face-attribute 'default nil
              :family "Ricty"
-             :height 150)
+             :height 180)
 
 ;; helm
 (use-package helm
@@ -300,8 +305,9 @@
   :ensure t
   :defer t
   ; :diminish paredit-mode
-  :bind (:map paredit-mode-map ("C-j" . eval-print-last-sexp))
-  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode scheme-mode) . enable-paredit-mode))
+  :bind (:map paredit-mode-map (("C-j" . eval-print-last-sexp)
+                                ("M-p" . paredit-splice-sexp-killing-backward)))
+  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode scheme-mode extempore-mode) . enable-paredit-mode))
 
 ;; Scheme / Gauche
 (setq process-coding-system-alist
@@ -518,6 +524,7 @@
 ;; supercollider
 (use-package sclang
   :load-path "elisp/scel"
+  ; :bind (:map sclang-mode-map ("C-j" . sclang-eval-defun))
   :config
   (progn
     (custom-set-variables
@@ -535,14 +542,29 @@
 
 (use-package tidal
   :load-path "elisp/tidal"
+  :bind (:map tidal-mode-map ("C-j" . tidal-run-multiple-lines))
   :config
   (progn
     (setq tidal-interpreter "~/.local/bin/stack")
-    (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
-
+    (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))
+    ))
 
 ;; faust
 (use-package faust-mode
+  :ensure t
+  :defer t)
+
+;; GLSL
+(use-package glsl-mode
+  :ensure t
+  :defer t
+  :mode (("\\.glsl$" . glsl-mode)
+         ("\\.vert$" . glsl-mode)
+         ("\\.frag$" . glsl-mode)
+         ("\\.geom$" . glsl-mode)))
+
+;; extempore
+(use-package extempore-mode
   :ensure t
   :defer t)
 

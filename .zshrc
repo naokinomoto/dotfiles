@@ -1,21 +1,46 @@
-export ZSH=$HOME/.oh-my-zsh
+# zplug
+source ~/.zplug/init.zsh
 
-ZSH_THEME="powerline"
+zplug "b4b4r07/zplug"
+zplug "b4b4r07/enhancd"
 
-plugins=(aws brew brew-cask atom bower bundler capistrano cp cpanm docker emoji-clock gem go grails gradle heroku history knife knife-ssh npm nvm nyan osx perl pip pod rails rake ruby rbenv python rsync sbt scala ssh-agent sudo vagrant zsh_reload)
+zplug "zsh-users/zsh-syntax-highlighting"
+zplug "zsh-users/zsh-history-substring-search"
+zplug "zsh-users/zsh-completions"
 
-source $ZSH/oh-my-zsh.sh
+zplug "yous/vanilli.sh"
 
-export LANGUAGE=ja_JP.UTF-8
-export LANG=ja_JP.UTF-8
-export LC_ALL=ja_JP.UTF-8
+zplug "Tarrasch/zsh-functional"
 
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/bin"
+zplug "plugins/git", from:oh-my-zsh
+
+zplug "yous/lime"
+
+#zplug 'dracula/zsh', as:theme
+
+export LIME_DIR_DISPLAY_COMPONENTS=2
+
+#ZSH_THEME="lime"
+
+if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
+fi
+
+zplug load --verbose
+
+#export LANGUAGE=ja_JP.UTF-8
+#export LANG=ja_JP.UTF-8
+#export LC_ALL=ja_JP.UTF-8
+
+export PATH="$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 
 ## history
 HISTFILE=~/.zsh_history
-HISTSIZE=100000
-SAVEHIST=100000
+HISTSIZE=1000000
+SAVEHIST=1000000
 
 setopt append_history
 setopt share_history
@@ -40,80 +65,82 @@ setopt prompt_subst
 setopt no_prompt_cr
 setopt transient_rprompt
 
-# alias
-alias ll="ls -alG"
-alias diff="colordiff"
+#autoload predict-on
+#predict-on
+
+
+# shell
+alias ll="ls -al --color=auto"
 alias less="less -R"
-alias e="/usr/local/bin/emacsclient"
-alias emacs="/usr/local/bin/emacs"
-alias gcc="gcc-4.8"
+alias history="history 1"
+
+alias g='cd $(ghq root)/$(ghq list | peco)'
+
+# emacs
+## emacsclient
+alias e="emacsclient -n"
+
+## cask
+export PATH="$HOME/.cask/bin:$PATH"
+
+# chromium
+alias chromium="chromium --force-device-scale-factor=1.2"
+
+# ruby
+## rbenv
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+
+## bundler
 alias bi="bundle install --path=vendor/bundle"
 alias be="bundle exec"
 
-export EMACS="/usr/local/bin/emacs"
-export EDITOR="/usr/local/bin/emacsclient"
+# nodejs
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# cask
-export PATH="$HOME/.cask/bin:$PATH"
+## yarn
+export PATH=$PATH:`yarn global bin`
 
-# rbenv
-#export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-
-# node.js
-[ -s "~/.nvm/nvm.sh" ] && . "~/.nvm/nvm.sh"
-
-# plenv
-#export PATH="$HOME/.plenv/bin:$PATH"
-#eval "$(plenv init -)"
-
-# python
-#export WORKON_HOME=$HOME/.virtualenvs
-#. /usr/local/bin/virtualenvwrapper.sh
-
-# cdr
-autoload -Uz chpwd_recent_dirs cdr add-zsh-hook
-add-zsh-hook chpwd chpwd_recent_dirs
-zstyle ':chpwd:*' recent-dirs-max 5000
-zstyle ':chpwd:*' recent-dirs-default yes
-zstyle ':completion:*' recent-dirs-insert both
-
-# zaw
-#source $HOME/.zaw/zaw.zsh
-#zstyle ':filter-select' case-insensitive yes
-#bindkey '^xf' zaw-cdr
-#bindkey '^x^b' zaw-git-recent-branches
-#bindkey '^x^f' zaw-git-files
-#bindkey '^x^r' zaw-history
-
-#source ~/.zsh-git-prompt/zshrc.sh
-#PROMPT='%B%m%~%b$(git_super_status) %# '
-
+# golang
 export GOPATH=$HOME
+export GOENVGOROOT=$HOME/.goenvs
+export GOENVTARGET=$HOME/bin
+export GOENVHOME=$HOME/workspace
 
-# powerline
-POWERLINE_HIDE_HOST_NAME="true"
-POWERLINE_HIDE_GIT_PROMPT_STATUS="true"
-POWERLINE_SHOW_GIT_ON_RIGHT="true"
+# stack
+export PATH="$HOME/.local/bin:$PATH"
 
-export PATH=$PATH:~/Library/Python/2.7/bin
-powerline-daemon -q
-. ~/Library/Python/2.7/lib/python/site-packages/powerline/bindings/zsh/powerline.zsh
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '$HOME/google-cloud-sdk/path.zsh.inc' ]; then source '$HOME/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '$HOME/google-cloud-sdk/completion.zsh.inc' ]; then source '$HOME/google-cloud-sdk/completion.zsh.inc'; fi
+
+# kubectl
+source <(kubectl completion zsh)
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+source ~/.zprofile
+export GOENV_ROOT="$HOME/.goenv"
+export PATH="$GOENV_ROOT/bin:$PATH"
+eval "$(goenv init -)"
+
+export VISUAL=emacs
+export EDITOR=emacs
 
 
-function peco-src() {
-  local selected_dir=$(ghq list --full-path | peco --query "$LBUFFER")
-  if [ -n "$selected_dir" ];then
-    BUFFER="cd ${selected_dir}"
-    zle accept-line
-  fi
-  zle clear-screen
-}
+fpath+=~/.zfunc
 
-zle -N peco-src
-bindkey '^]' peco-src
+autoload -U compinit
+compinit
 
-export DOCKER_TLS_VERIFY=1
-export DOCKER_HOST=tcp://192.168.59.103:2376
-export DOCKER_CERT_PATH=~/.boot2docker/certs/boot2docker-vm
-nvm use iojs
+export RUST_SRC_PATH="$(rustc --print sysroot)/lib/rustlib/src/rust/src"

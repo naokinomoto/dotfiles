@@ -1,0 +1,50 @@
+Xft.dpi: 144
+Xft.autohint: 0
+Xft.lcdfilter: lcddefault
+Xft.hintstyle: hintslight
+Xft.hinting: 1
+Xft.antialias: 1
+Xft.rgba: rgb
+
+!!! URxvt
+!!! https://wiki.archlinuxjp.org/index.php/Rxvt-unicode
+! do not scroll with output
+URxvt*scrollTtyOutput: false
+
+! scroll in relation to buffer (with mouse scroll or Shift+Page Up)
+URxvt*scrollWithBuffer: true
+
+! scroll back to the bottom on keypress
+URxvt*scrollTtyKeypress: true
+
+URxvt.secondaryScreen: 1
+URxvt.secondaryScroll: 0
+
+URxvt.secondaryWheel: 1
+URxvt.letterSpace: -1
+
+URxvt*font: xft:Ricty:size=18:antialias=true
+
+URxvt.scrollBar: false
+
+! molokai color scheme
+!
+*background:    #101010
+*foreground:    #d0d0d0
+*cursorColor:   #d0d0d0
+*color0:        #101010
+*color1:        #960050
+*color2:        #66aa11
+*color3:        #c47f2c
+*color4:        #30309b
+*color5:        #7e40a5
+*color6:        #3579a8
+*color7:        #9999aa
+*color8:        #303030
+*color9:        #ff0090
+*color10:       #80ff00
+*color11:       #ffba68
+*color12:       #5f5fee
+*color13:       #bb88dd
+*color14:       #4eb4fa
+*color15:       #d0d0d0
