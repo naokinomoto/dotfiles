@@ -139,7 +139,7 @@
   :defer t
   :init
   (progn
-   (setq dipslay-buffer-function 'popwin:display-buffer)))
+   (setq display-buffer-function 'popwin:display-buffer)))
 
 ;; migemo
 ;; https://gist.github.com/4176883
