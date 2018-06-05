@@ -97,6 +97,9 @@
     (set-face-foreground 'whitespace-tab "#555555")
     (set-face-background 'whitespace-tab nil)))
 
+
+
+
 ;; 行末の空白をめだたせる M-x delete-trailing-whitespace で削除出来る
 (when (boundp 'show-trailing-whitespace) (setq-default show-trailing-whitespace t))
 ;; yes/no -> y/n
@@ -251,7 +254,7 @@
 
 (set-face-attribute 'default nil
              :family "Ricty"
-             :height 180)
+             :height 100)
 
 ;; helm
 (use-package helm
@@ -294,6 +297,31 @@
 (use-package flycheck
   :ensure t
   :defer t)
+
+;; yasnipet
+(use-package yasnippet
+  :ensure t
+  :defer t)
+
+
+(use-package w3m
+  :ensure t
+  :config
+  (setq w3m-coding-system 'utf-8
+        w3m-file-coding-system 'utf-8
+        w3m-file-name-coding-system 'utf-8
+        w3m-input-coding-system 'utf-8
+        w3m-output-coding-system 'utf-8
+        w3m-terminal-coding-system 'utf-8)
+  (setq w3m-command "/usr/bin/w3m")
+  (setq browse-url-browser-function 'w3m-browse-url)
+  (autoload 'w3m-browse-url "w3m")
+  (global-set-key "\C-xm" 'browse-url-at-point)
+  (setq w3m-use-cookies t)
+  (setq w3m-default-display-inline-images t))
+
+
+(require 'w3m)
 
 ;; elisp
 (use-package lispxmp
@@ -531,14 +559,10 @@
      '(sclang-indent-level 2)
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
 
-;; tidal
-;; (use-package tidal
-;;   :ensure t
-;;   :defer t
-;;   :config
-;;   (progn
-;;     (setq tidal-interpreter "~/.local/bin/stack")
-;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
+(use-package highlight-numbers
+  :ensure t
+  :defer t
+  :hook (tidal-mode . highlight-numbers-mode))
 
 (use-package tidal
   :load-path "elisp/tidal"
@@ -546,8 +570,75 @@
   :config
   (progn
     (setq tidal-interpreter "~/.local/bin/stack")
-    (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))
-    ))
+    (setq tidal-interpreter-arguments
+          (list
+           "ghci"
+           "--ghc-options"
+           "-XOverloadedStrings"
+           "--ghc-options"
+           "-i/home/reprimande/src/github.com/reprimande/liveset/modular/lib"))
+    (defun tidal-start-haskell ()
+      "Start haskell."
+      (interactive)
+      (if (comint-check-proc tidal-buffer)
+          (error "A tidal process is already running")
+        (apply
+         'make-comint
+         "tidal"
+         tidal-interpreter
+         nil
+         tidal-interpreter-arguments)
+        (tidal-see-output))
+      (tidal-send-string ":set prompt \"\"")
+      (tidal-send-string ":set prompt2 \"\"")
+      (tidal-send-string ":module Sound.Tidal.Context")
+      (tidal-send-string "import qualified Sound.Tidal.Scales as Scales")
+      (tidal-send-string "import qualified Sound.Tidal.Chords as Chords")
+      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Stream.hs")
+      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Lib.hs")
+      (tidal-send-string "import Liveset.Modular.Stream")
+      (tidal-send-string "import Liveset.Modular.Lib")
+      (tidal-send-string "(cps, nudger, getNow) <- cpsUtils'")
+      (tidal-send-string "(d1,t1) <- superDirtSetters getNow")
+      (tidal-send-string "(d2,t2) <- superDirtSetters getNow")
+      (tidal-send-string "(d3,t3) <- superDirtSetters getNow")
+      (tidal-send-string "(d4,t4) <- superDirtSetters getNow")
+      (tidal-send-string "(d5,t5) <- superDirtSetters getNow")
+      (tidal-send-string "(d6,t6) <- superDirtSetters getNow")
+      (tidal-send-string "(d7,t7) <- superDirtSetters getNow")
+      (tidal-send-string "(d8,t8) <- superDirtSetters getNow")
+      (tidal-send-string "(d9,t9) <- superDirtSetters getNow")
+      (tidal-send-string "(d10,t10) <- superDirtSetters getNow")
+      (tidal-send-string "(c1,ct1) <- dirtSetters getNow")
+      (tidal-send-string "(c2,ct2) <- dirtSetters getNow")
+      (tidal-send-string "(c3,ct3) <- dirtSetters getNow")
+      (tidal-send-string "(c4,ct4) <- dirtSetters getNow")
+      (tidal-send-string "(c5,ct5) <- dirtSetters getNow")
+      (tidal-send-string "(c6,ct6) <- dirtSetters getNow")
+      (tidal-send-string "(c7,ct7) <- dirtSetters getNow")
+      (tidal-send-string "(c8,ct8) <- dirtSetters getNow")
+      (tidal-send-string "(c9,ct9) <- dirtSetters getNow")
+      (tidal-send-string "(c10,ct10) <- dirtSetters getNow")
+      (tidal-send-string "(s0,st0) <- zzzSetters getNow")
+      (tidal-send-string "(s1,st1) <- zzzSetters getNow")
+      (tidal-send-string "(s2,st2) <- zzzSetters getNow")
+      (tidal-send-string "(s3,st3) <- zzzSetters getNow")
+      (tidal-send-string "(s4,st4) <- zzzSetters getNow")
+      (tidal-send-string "(s5,st5) <- zzzSetters getNow")
+      (tidal-send-string "(s6,st6) <- zzzSetters getNow")
+      (tidal-send-string "(s7,st7) <- zzzSetters getNow")
+      (tidal-send-string "(s8,st8) <- zzzSetters getNow")
+      (tidal-send-string "(s9,st9) <- zzzSetters getNow")
+      (tidal-send-string "(s10,st10) <- zzzSetters getNow")
+      (tidal-send-string "let hush' = mapM_ ($ silence) [s0,s1,s2,s3,s4,s5,s6,s7,s8]")
+      (tidal-send-string "let bps x = cps (x/2)")
+      (tidal-send-string "let hush = mapM_ ($ silence) [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10]")
+      (tidal-send-string "let solo = (>>) hush")
+      (tidal-send-string ":set prompt \"> \""))))
+
+(add-hook 'font-lock-mode-hook
+          '(lambda ()
+             (set-face-foreground 'font-lock-constant-face "magenta")))
 
 ;; faust
 (use-package faust-mode
@@ -656,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ;; tags
 ;; flymake
 ;; yasnippet
+
 
 ;; for mac
 (when (eq system-type 'darwin)
