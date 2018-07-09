@@ -71,7 +71,7 @@ The expressions are joined as alternatives with the \\| operator."
   "Regular expression matching method names.")
 
 (defconst sclang-class-name-regexp
-  "\\(?:Meta_\\)?[A-Z]\\(?:\\sw\\|\\s_\\)*"
+  "\\<\\(?:Meta_\\)?[A-Z]\\(?:\\sw\\|\\s_\\)*"
   "Regular expression matching class names.")
 
 (defconst sclang-primitive-name-regexp
@@ -207,6 +207,9 @@ low-resource systems."
 (defvar sclang-symbol-table nil
   "List of all defined symbols.")
 
+(defvar sclang-class-list nil
+  "List of all defined classes.")
+
 (defvar sclang-symbol-history nil
   "List of recent symbols read from the minibuffer.")
 
@@ -217,6 +220,10 @@ low-resource systems."
  (lambda (arg)
    (when (and sclang-use-symbol-table arg)
      (setq sclang-symbol-table (sort arg 'string<))
+     (setq sclang-class-list (remove-if
+                              (lambda (x) (or (not (sclang-class-name-p x))
+                                              (sclang-string-match "^Meta_" x)))
+                              sclang-symbol-table))
      (sclang-update-font-lock))))
 
 (add-hook 'sclang-library-startup-hook
