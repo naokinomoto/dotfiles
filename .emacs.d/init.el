@@ -1,4 +1,6 @@
-(setq gc-cons-threshold (* 512 1024 1024))
+(setq gc-cons-threshold (* 1024 1024 1024))
+(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold (* 8 1024 1024))))
+(setq garbage-collection-messages t)
 
 (add-to-list 'exec-path "/usr/local/bin")
 (add-to-list 'exec-path "~/bin")
@@ -67,6 +69,20 @@
 ;; 色つける
 (global-font-lock-mode t)
 (setq-default transient-mark-mode t)
+
+(ffap-bindings)
+
+(use-package dired
+  :ensure nil
+  :commands (dired)
+  :custom
+  (dired-dwim-target t "Enable side-by-side `dired' buffer targets.")
+  (dired-recursive-copies 'always "Better recursion in `dired'.")
+  (dired-recursive-deletes 'top)
+  (dired-listing-switches "-lahp"))
+
+(advice-add 'dired-find-file :after 'delete-other-windows)
+
 ;; wdired
 (use-package wdired
   :ensure t
@@ -74,19 +90,20 @@
   :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
   )
 ;; 改行マーク/全角スペースマーク/タブマーク
+(setq whitespace-style
+      '(tabs tab-mark spaces space-mark face))
+(setq whitespace-space-regexp "\\(\x3000+\\)")
+(setq whitespace-display-mappings
+      '((space-mark ?\x3000 [?\□])
+        (tab-mark   ?\t   [?\xBB ?\t])
+        ))
+
 (use-package whitespace
   :ensure t
   :defer t
   :config
   (progn
     (global-whitespace-mode 1)
-    (setq whitespace-style
-          '(tabs tab-mark spaces space-mark face))
-    (setq whitespace-space-regexp "\\(\x3000+\\)")
-    (setq whitespace-display-mappings
-          '((space-mark ?\x3000 [?\□])
-            (tab-mark   ?\t   [?\xBB ?\t])
-            ))
     (set-face-foreground 'whitespace-space "#555555")
     (set-face-background 'whitespace-space nil)
     (set-face-foreground 'whitespace-tab "#555555")
@@ -96,6 +113,7 @@
 (when (boundp 'show-trailing-whitespace) (setq-default show-trailing-whitespace t))
 ;; yes/no -> y/n
 (fset 'yes-or-no-p 'y-or-n-p)
+
 ;; tramp
 (use-package tramp
   :ensure t
@@ -280,12 +298,35 @@
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous))
   (:map emacs-lisp-mode-map
-        ("C-M-i" . company-complete)))
+        ("C-M-i" . company-complete))
+  :config
+  (progn
+    (global-company-mode)))
 
 ;; flycheck
 (use-package flycheck
   :ensure t
   :defer t)
+
+(use-package magit
+  :ensure t
+  :defer t)
+
+;; git-gutter+
+(use-package git-gutter+
+  :ensure t
+  :init (global-git-gutter+-mode)
+  :config (progn
+            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
+            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
+  :diminish (git-gutter+-mode . "gg"))
 
 ;; elisp
 (use-package lispxmp
@@ -298,9 +339,27 @@
   :defer t
   :diminish paredit-mode
   :bind (:map paredit-mode-map ("C-j" . eval-print-last-sexp))
-  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode) . enable-paredit-mode))
+  :hook ((emacs-lisp-mode lisp-interaction-mode lisp-mode ielm-mode scheme-mode) . enable-paredit-mode))
 
-;; ruby
+;; Scheme / Gauche
+(setq process-coding-system-alist
+      (cons '("gosh" utf-8 . utf-8) process-coding-system-alist))
+
+(setq scheme-program-name "gosh -i")
+(autoload 'scheme-mode "cmuscheme" "Major mode for Scheme." t)
+(autoload 'run-scheme "cmuscheme" "Run ad inferior Scheme process." t)
+
+(defun scheme-other-window ()
+  "Run scheme on other window"
+  (interactive)
+  (switch-to-buffer-other-window
+   (get-buffer-create "*scheme*"))
+  (run-scheme scheme-program-name))
+
+(define-key global-map
+  "\C-cs" 'scheme-other-window)
+
+;; Ruby
 ;; TODO: basic configure only
 (use-package ruby-mode
   :ensure t
@@ -367,8 +426,8 @@
          (racer-mode . eldoc-mode)
          (racer-mode . (lambda ()
                          (company-mode)
-                         (set (make-variable-buffer-local 'company-idle-delay) 0.1)
-                         (set (make-variable-buffer-local 'company-minimum-prefix-length) 0))))
+                         (set (make-variable-buffer-local 'company-idle-delay) 0.3)
+                         (set (make-variable-buffer-local 'company-minimum-prefix-length) 1))))
   :init
   (progn
     (add-to-list 'exec-path (expand-file-name "~/.cargo/bin")))
@@ -376,7 +435,25 @@
   (progn
     (setq-default rust-format-on-save t)))
 
+;; scala
+(use-package ensime
+  :ensure t
+  :pin melpa-stable)
+
+(use-package sbt-mode
+  :pin melpa)
+
+(use-package scala-mode
+  :pin melpa)
+
 ;; python
+(use-package py-autopep8
+  :ensure t
+  :defer t
+  :hook (python-mode . py-autopep8-enable-on-save)
+  :config
+  (progn
+    (setq py-autopep8-options '("--max-line-length=100"))))
 
 ;; golang
 (use-package go-autocomplete
@@ -411,8 +488,15 @@
   :defer t
   :mode "\\.js$"
   :hook ((js2-mode . (lambda ()
-                       (setq js2-basic-offset 2)))
-         (js2-mode . ac-js2-mode)
+                       (setq js2-basic-offset 2)
+                       (setq prettier-js-args
+                             '(
+                               "--tab-width" "2"
+                               "--single-quote" "true"
+                               "--no-semi" "true"
+                               ))
+                       ))
+         ; (js2-mode . ac-js2-mode)
          (js-mode . js2-minor-mode)))
 
 (use-package json-mode
@@ -432,18 +516,41 @@
   :ensure t
   :defer t
   :hook (typescript-mode . (lambda ()
-          (tide-setup)
-          (flycheck-mode t)
-          (setq flycheck-check-syntax-automatically '(save mode-enabled))
-          (eldoc-mode t)
-          (company-mode-on))))
+                             (setq prettier-js-args
+                                   '(
+                                     "--tab-width" "4"
+                                     "--single-quote" "true"
+                                     "--no-semi" "false"
+                                     ))
+                             (tide-setup)
+                             (flycheck-mode t)
+                             (setq flycheck-check-syntax-automatically '(save mode-enabled))
+                             (eldoc-mode t)
+                             (tide-hl-identifier-mode t)
+                             (company-mode +1))))
+
+(defun enable-minor-mode (my-pair)
+  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  (if (buffer-file-name)
+      (if (string-match (car my-pair) buffer-file-name)
+          (funcall (cdr my-pair)))))
+
+(defun enable-minor-mode (my-pair)
+  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  (if (buffer-file-name)
+      (if (string-match (car my-pair) buffer-file-name)
+      (funcall (cdr my-pair)))))
 
 (use-package prettier-js
   :ensure t
   :defer t
   :hook ((js2-mode . prettier-js-mode)
          (typescript-mode . prettier-js-mode)
-         (web-mode . prettier-js-mode)))
+         (web-mode . (lambda ()
+                       (enable-minor-mode
+                        '("\\.jsx?\\'" . prettier-js-mode))
+                       (enable-minor-mode
+                        '("\\.tsx?\\'" . prettier-js-mode))))))
 
 
 ;; web-mode
@@ -487,7 +594,6 @@
 ;; supercollider
 (use-package sclang
   :load-path "elisp/scel"
-  :defer t
   :config
   (progn
     (custom-set-variables
@@ -495,13 +601,22 @@
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
 
 ;; tidal
+;; (use-package tidal
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (progn
+;;     (setq tidal-interpreter "~/.local/bin/stack")
+;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
+
 (use-package tidal
-  :ensure t
-  :defer t
+  :load-path "elisp/tidal"
+  :bind (:map tidal-mode-map ("C-j" . tidal-run-multiple-lines))
   :config
   (progn
     (setq tidal-interpreter "~/.local/bin/stack")
     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
+
 
 ;; faust
 (use-package faust-mode
@@ -522,6 +637,11 @@
 
 ;; toml
 (use-package toml-mode
+  :ensure t
+  :defer t)
+
+;; terraform
+(use-package terraform-mode
   :ensure t
   :defer t)
 
@@ -561,35 +681,76 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 ")))
 
-;; org
-(use-package org
+(use-package yasnippet
   :ensure t
+  :defer t)
+
+;; autoinsert
+(auto-insert-mode 1)
+(setq auto-insert-directory "~/.emacs.d/templates/")
+(setq auto-insert-alist
+      (nconc '(
+               ("\\.html$" . "tmpl.html")
+               ("\\.py$" . "tmpl.py")
+               ("\\.pl$" . "tmpl.pl")
+               ("\\.rb$" . "tmpl.rb")
+               ("\\.php$" . "tmpl.php")
+               ("\\.tsx$" . "tmpl.tsx")
+               ) auto-insert-alist))
+
+(add-hook 'find-file-not-found-hooks 'auto-insert)
+
+
+;; ESS
+(use-package ess
+  :ensure t
+  :init (require 'ess))
+
+;; stan
+(use-package stan-snippets
+  :ensure t
+  :defer t)
+
+(use-package stan-mode
+  :ensure t
+  :defer t)
+
+
+(use-package octave
   :defer t
-  :commands (org-remember-insinuate)
-  :mode ("\\.org$" . org-mode)
-  :bind (("\C-cl" . org-store-link)
-         ("\C-ca" . org-agenda)
-         ("\C-cr" . org-remember))
-  :hook (org-mode . turn-on-font-lock)
   :config
-  (progn
-    ;; 見出しの余分な*を消す
-    (setq org-hide-leading-stars t)
-    ;; org-default-notes-file のディレクトリ
-    (setq org-directory "~/Dropbox/org/")
-    ;; org-default-notes-file のファイル名
-    (setq org-default-notes-file "notes.org")
-    ;; TODO 状態
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
-    ;; DONE の時刻を記録
-    (setq org-log-done 'time)
-    ;; org-remember を使う
-    (org-remember-insinuate)
-    ;; org-remember のテンプレート
-    (setq org-remember-templates
-          '(("Note" ?n "* %?\n  %i\n  %a" nil "Tasks")
-            ("Todo" ?t "* TODO %?\n  %i\n  %a" nil "Tasks")))))
+  (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+  (setf octave-block-offset 4))
+
+;; org
+;; (use-package org
+;;   :ensure t
+;;   :defer t
+;;   :commands (org-remember-insinuate)
+;;   :mode ("\\.org$" . org-mode)
+;;   :bind (("\C-cl" . org-store-link)
+;;          ("\C-ca" . org-agenda)
+;;          ("\C-cr" . org-remember))
+;;   :hook (org-mode . turn-on-font-lock)
+;;   :config
+;;   (progn
+;;     ;; 見出しの余分な*を消す
+;;     (setq org-hide-leading-stars t)
+;;     ;; org-default-notes-file のディレクトリ
+;;     (setq org-directory "~/Dropbox/org/")
+;;     ;; org-default-notes-file のファイル名
+;;     (setq org-default-notes-file "notes.org")
+;;     ;; TODO 状態
+;;     (setq org-todo-keywords
+;;           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+;;     ;; DONE の時刻を記録
+;;     (setq org-log-done 'time)
+;;     ;; org-remember を使う
+;;     (org-remember-insinuate)
+;;     ;; org-remember のテンプレート
+;;     (setq org-remember-templates
+;;           '(("Note" ?n "* %?\n  %i\n  %a" nil "Tasks")
+;;             ("Todo" ?t "* TODO %?\n  %i\n  %a" nil "Tasks")))))
 
 ;;;;;;;;
 ;; TODO
@@ -625,8 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
   (load-theme 'atom-one-dark t))
 
 ;; emacs server
-(when (eq window-system 'nil)
-  (use-package server
+(use-package server
   :ensure t
   :defer t
   :init
@@ -634,4 +794,4 @@ document.addEventListener('DOMContentLoaded', () => {
   :config
   (progn
     (unless (server-running-p)
-    (server-start)))))
+    (server-start))))
