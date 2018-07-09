@@ -71,6 +71,20 @@
 ;; 色つける
 (global-font-lock-mode t)
 (setq-default transient-mark-mode t)
+
+(ffap-bindings)
+
+(use-package dired
+  :ensure nil
+  :commands (dired)
+  :custom
+  (dired-dwim-target t "Enable side-by-side `dired' buffer targets.")
+  (dired-recursive-copies 'always "Better recursion in `dired'.")
+  (dired-recursive-deletes 'top)
+  (dired-listing-switches "-lahp"))
+
+(advice-add 'dired-find-file :after 'delete-other-windows)
+
 ;; wdired
 (use-package wdired
   :ensure t
@@ -96,8 +110,6 @@
     (set-face-background 'whitespace-space nil)
     (set-face-foreground 'whitespace-tab "#555555")
     (set-face-background 'whitespace-tab nil)))
-
-
 
 
 ;; 行末の空白をめだたせる M-x delete-trailing-whitespace で削除出来る
@@ -291,12 +303,35 @@
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous))
   (:map emacs-lisp-mode-map
-        ("C-M-i" . company-complete)))
+        ("C-M-i" . company-complete))
+  :config
+  (progn
+    (global-company-mode)))
 
 ;; flycheck
 (use-package flycheck
   :ensure t
   :defer t)
+
+(use-package magit
+  :ensure t
+  :defer t)
+
+;; git-gutter+
+(use-package git-gutter+
+  :ensure t
+  :init (global-git-gutter+-mode)
+  :config (progn
+            (define-key git-gutter+-mode-map (kbd "C-x n") 'git-gutter+-next-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x p") 'git-gutter+-previous-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x v =") 'git-gutter+-show-hunk)
+            (define-key git-gutter+-mode-map (kbd "C-x r") 'git-gutter+-revert-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x t") 'git-gutter+-stage-hunks)
+            (define-key git-gutter+-mode-map (kbd "C-x c") 'git-gutter+-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C") 'git-gutter+-stage-and-commit)
+            (define-key git-gutter+-mode-map (kbd "C-x C-y") 'git-gutter+-stage-and-commit-whole-buffer)
+            (define-key git-gutter+-mode-map (kbd "C-x U") 'git-gutter+-unstage-whole-buffer))
+  :diminish (git-gutter+-mode . "gg"))
 
 ;; yasnipet
 (use-package yasnippet
@@ -340,7 +375,6 @@
 ;; Scheme / Gauche
 (setq process-coding-system-alist
       (cons '("gosh" utf-8 . utf-8) process-coding-system-alist))
-
 (setq scheme-program-name "gosh -i")
 (autoload 'scheme-mode "cmuscheme" "Major mode for Scheme." t)
 (autoload 'run-scheme "cmuscheme" "Run ad inferior Scheme process." t)
@@ -431,7 +465,25 @@
   (progn
     (setq-default rust-format-on-save t)))
 
+;; scala
+(use-package ensime
+  :ensure t
+  :pin melpa-stable)
+
+(use-package sbt-mode
+  :pin melpa)
+
+(use-package scala-mode
+  :pin melpa)
+
 ;; python
+(use-package py-autopep8
+  :ensure t
+  :defer t
+  :hook (python-mode . py-autopep8-enable-on-save)
+  :config
+  (progn
+    (setq py-autopep8-options '("--max-line-length=100"))))
 
 ;; golang
 (use-package go-autocomplete
@@ -466,8 +518,15 @@
   :defer t
   :mode "\\.js$"
   :hook ((js2-mode . (lambda ()
-                       (setq js2-basic-offset 2)))
-         ;(js2-mode . ac-js2-mode)
+                       (setq js2-basic-offset 2)
+                       (setq prettier-js-args
+                             '(
+                               "--tab-width" "2"
+                               "--single-quote" "true"
+                               "--no-semi" "true"
+                               ))
+                       ))
+         ; (js2-mode . ac-js2-mode)
          (js-mode . js2-minor-mode)))
 
 (use-package json-mode
@@ -487,11 +546,30 @@
   :ensure t
   :defer t
   :hook (typescript-mode . (lambda ()
-          (tide-setup)
-          (flycheck-mode t)
-          (setq flycheck-check-syntax-automatically '(save mode-enabled))
-          (eldoc-mode t)
-          (company-mode-on))))
+                             (setq prettier-js-args
+                                   '(
+                                     "--tab-width" "4"
+                                     "--single-quote" "true"
+                                     "--no-semi" "false"
+                                     ))
+                             (tide-setup)
+                             (flycheck-mode t)
+                             (setq flycheck-check-syntax-automatically '(save mode-enabled))
+                             (eldoc-mode t)
+                             (tide-hl-identifier-mode t)
+                             (company-mode +1))))
+
+(defun enable-minor-mode (my-pair)
+  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  (if (buffer-file-name)
+      (if (string-match (car my-pair) buffer-file-name)
+          (funcall (cdr my-pair)))))
+
+(defun enable-minor-mode (my-pair)
+  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
+  (if (buffer-file-name)
+      (if (string-match (car my-pair) buffer-file-name)
+      (funcall (cdr my-pair)))))
 
 (defun enable-minor-mode (my-pair)
   "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
@@ -558,6 +636,15 @@
     (custom-set-variables
      '(sclang-indent-level 2)
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
+
+;; tidal
+;; (use-package tidal
+;;   :ensure t
+;;   :defer t
+;;   :config
+;;   (progn
+;;     (setq tidal-interpreter "~/.local/bin/stack")
+;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
 
 (use-package highlight-numbers
   :ensure t
@@ -640,6 +727,7 @@
           '(lambda ()
              (set-face-foreground 'font-lock-constant-face "magenta")))
 
+
 ;; faust
 (use-package faust-mode
   :ensure t
@@ -673,6 +761,11 @@
 
 ;; toml
 (use-package toml-mode
+  :ensure t
+  :defer t)
+
+;; terraform
+(use-package terraform-mode
   :ensure t
   :defer t)
 
@@ -711,6 +804,48 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 ")))
+
+
+(use-package yasnippet
+  :ensure t
+  :defer t)
+
+;; autoinsert
+(auto-insert-mode 1)
+(setq auto-insert-directory "~/.emacs.d/templates/")
+(setq auto-insert-alist
+      (nconc '(
+               ("\\.html$" . "tmpl.html")
+               ("\\.py$" . "tmpl.py")
+               ("\\.pl$" . "tmpl.pl")
+               ("\\.rb$" . "tmpl.rb")
+               ("\\.php$" . "tmpl.php")
+               ("\\.tsx$" . "tmpl.tsx")
+               ) auto-insert-alist))
+
+(add-hook 'find-file-not-found-hooks 'auto-insert)
+
+
+;; ESS
+(use-package ess
+  :ensure t
+  :init (require 'ess))
+
+;; stan
+(use-package stan-snippets
+  :ensure t
+  :defer t)
+
+(use-package stan-mode
+  :ensure t
+  :defer t)
+
+
+(use-package octave
+  :defer t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+  (setf octave-block-offset 4))
 
 ;; org
 ;; (use-package org
