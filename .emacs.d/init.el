@@ -5,6 +5,7 @@
 (add-to-list 'exec-path "/usr/local/bin")
 (add-to-list 'exec-path "~/bin")
 (add-to-list 'load-path "~/.emacs.d/elisp")
+(add-to-list 'load-path "~/.emacs.d/elisp/tidal")
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -21,6 +22,14 @@
   (package-refresh-contents)
   (package-install 'use-package))
 (require 'use-package)
+
+
+(use-package auto-package-update
+   :ensure t
+   :config
+   (setq auto-package-update-delete-old-versions t
+         auto-package-update-interval 4)
+   (auto-package-update-maybe))
 
 (setq debug-on-error t)
 
@@ -40,7 +49,7 @@
 ;; メニューバーを消す
 (menu-bar-mode -1)
 ;; スクロールバーを消す
-(scroll-bar-mode -1)
+;; (scroll-bar-mode -1)
 ;; ツールバー（アイコン）を消す
 (tool-bar-mode 0)
 (column-number-mode t)
@@ -119,6 +128,12 @@
 
 (define-key isearch-mode-map (kbd "C-h") 'isearch-del-char)
 
+(use-package move-text
+  :ensure t
+  :init
+  (progn
+    (move-text-default-bindings)))
+
 ;; tramp
 (use-package tramp
   :ensure t
@@ -185,10 +200,19 @@
     (setq cua-enable-cua-keys nil)))
 
 ;; ddskk
-(use-package ddskk
-  :ensure t
-  :defer t
-  :bind ("C-x C-j" . skk-mode))
+;; (package-install 'ddskk)
+
+(use-package skk-autoloads
+  :bind (("C-x C-j" . skk-mode))
+  :config
+  (setq skk-byte-compile-init-file t)
+  ;; 句読点を全角 (，．) にする
+  (setq skk-kutouten-type 'en))
+
+;; (use-package ddskk
+;;   :ensure t
+;;   :defer t
+;;   :bind ("C-x C-j" . skk-mode))
 
 ;; neotree
 (use-package neotree
@@ -289,6 +313,7 @@
     (use-package helm-config)
     (helm-mode 1)))
 
+
 ;; company
 (use-package company
   :ensure t
@@ -311,7 +336,35 @@
 ;; flycheck
 (use-package flycheck
   :ensure t
-  :defer t)
+  :defer t
+  :init
+  (progn
+    (global-flycheck-mode)))
+
+
+(use-package lsp-mode
+  :ensure t)
+
+(use-package lsp-ui
+  :ensure t)
+
+(use-package company-lsp
+  :ensure t)
+
+(use-package eglot
+  :ensure t)
+
+(use-package dumb-jump
+  :ensure t)
+
+(use-package highlight-symbol
+  :ensure t)
+
+(use-package rainbow-delimiters
+  :ensure t)
+
+(use-package smartparens
+  :ensure t)
 
 (use-package magit
   :ensure t
@@ -436,34 +489,63 @@
                           (font-lock-mode)
                           (imenu-add-menubar-index))))
 
+
+(defun my-set-projectile-root ()
+  (when lsp--cur-workspace
+    (setq projectile-project-root (lsp--workspace-root lsp--cur-workspace))))
+(add-hook 'lsp-before-open-hook #'my-set-projectile-root)
+
 ;; rust
-;; flycheck
-(use-package flycheck-rust
-  :ensure t
-  :defer t)
-
-(use-package racer
-  :ensure t
-  :defer t)
-
-(use-package rust-mode
+(use-package rustic
   :ensure t
   :defer t
-  :hook ((rust-mode . (lambda ()
-                        (racer-mode)
-                        (flycheck-rust-setup)
-                        ))
-         (racer-mode . eldoc-mode)
-         (racer-mode . (lambda ()
-                         (company-mode)
-                         (set (make-variable-buffer-local 'company-idle-delay) 0.3)
-                         (set (make-variable-buffer-local 'company-minimum-prefix-length) 1))))
   :init
-  (progn
-    (add-to-list 'exec-path (expand-file-name "~/.cargo/bin")))
+  (add-hook 'rustic-mode-hook
+            '(lambda ()
+               (racer-mode t)
+               (dumb-jump-mode t)
+               (highlight-symbol-mode t)
+               (rainbow-delimiters-mode t)
+               (smartparens-mode t)))
+  :mode ("\\.rs" . rustic-mode)
+  :commands (rustic-mode)
   :config
-  (progn
-    (setq-default rust-format-on-save t)))
+  (setq rustic-rls-pkg 'eglot)
+  (use-package quickrun
+    :defer t
+    :ensure t)
+  (use-package racer
+    :defer t
+    :ensure t)
+  )
+
+;; flycheck
+;; (use-package flycheck-rust
+;;   :ensure t
+;;   :defer t)
+
+;; (use-package racer
+;;   :ensure t
+;;   :defer t)
+
+;; (use-package rust-mode
+;;   :ensure t
+;;   :defer t
+;;   :hook ((rust-mode . (lambda ()
+;;                         (racer-mode)
+;;                         (flycheck-rust-setup)
+;;                         ))
+;;          (racer-mode . eldoc-mode)
+;;          (racer-mode . (lambda ()
+;;                          (company-mode)
+;;                          (set (make-variable-buffer-local 'company-idle-delay) 0.3)
+;;                          (set (make-variable-buffer-local 'company-minimum-prefix-length) 1))))
+;;   :init
+;;   (progn
+;;     (add-to-list 'exec-path (expand-file-name "~/.cargo/bin")))
+;;   :config
+;;   (progn
+;;     (setq-default rust-format-on-save t)))
 
 ;; scala
 (use-package ensime
@@ -494,23 +576,41 @@
   :ensure t
   :defer t)
 
+(use-package go-dlv
+  :ensure t
+  :defer t)
+
 (use-package go-mode
   :ensure t
   :defer t
   :hook ((before-save . gofmt-before-save)
-         (go-mode . flycheck-mode)
+         (go-mode . lsp)
          (go-mode . (lambda ()
                       (local-set-key (kbd "M-.") 'godef-jump)
-                      (set (make-local-variable 'company-backends) '(company-go))
-                      (require 'auto-complete-config)
-                      (ac-config-default)
-                      (company-mode)
                       (setq indent-tabs-mode nil)
                       (setq c-basic-offset 4)
                       (setq tab-width 4))))
   :init
   (progn
     (add-to-list 'exec-path (expand-file-name "~/bin"))))
+
+;; (use-package go-mode
+;;   :ensure t
+;;   :defer t
+;;   :hook ((before-save . gofmt-before-save)
+;;          (go-mode . flycheck-mode)
+;;          (go-mode . (lambda ()
+;;                       (local-set-key (kbd "M-.") 'godef-jump)
+;;                       (set (make-local-variable 'company-backends) '(company-go))
+;;                       (require 'auto-complete-config)
+;;                       (ac-config-default)
+;;                       (company-mode)
+;;                       (setq indent-tabs-mode nil)
+;;                       (setq c-basic-offset 4)
+;;                       (setq tab-width 4))))
+;;   :init
+;;   (progn
+;;     (add-to-list 'exec-path (expand-file-name "~/bin"))))
 
 ;; javascript
 (use-package js2-mode
@@ -637,22 +737,13 @@
      '(sclang-indent-level 2)
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
 
-;; tidal
-;; (use-package tidal
-;;   :ensure t
-;;   :defer t
-;;   :config
-;;   (progn
-;;     (setq tidal-interpreter "~/.local/bin/stack")
-;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
 
-(use-package highlight-numbers
-  :ensure t
-  :defer t
-  :hook (tidal-mode . highlight-numbers-mode))
+
+(require 'haskell-mode)
+(require 'tidal)
 
 (use-package tidal
-  :load-path "elisp/tidal"
+  :load-path "~/.emacs.d/elisp/tidal"
   :bind (:map tidal-mode-map ("C-j" . tidal-run-multiple-lines))
   :config
   (progn
@@ -661,67 +752,87 @@
           (list
            "ghci"
            "--ghc-options"
-           "-XOverloadedStrings"
-           "--ghc-options"
-           "-i/home/reprimande/src/github.com/reprimande/liveset/modular/lib"))
-    (defun tidal-start-haskell ()
-      "Start haskell."
-      (interactive)
-      (if (comint-check-proc tidal-buffer)
-          (error "A tidal process is already running")
-        (apply
-         'make-comint
-         "tidal"
-         tidal-interpreter
-         nil
-         tidal-interpreter-arguments)
-        (tidal-see-output))
-      (tidal-send-string ":set prompt \"\"")
-      (tidal-send-string ":set prompt2 \"\"")
-      (tidal-send-string ":module Sound.Tidal.Context")
-      (tidal-send-string "import qualified Sound.Tidal.Scales as Scales")
-      (tidal-send-string "import qualified Sound.Tidal.Chords as Chords")
-      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Stream.hs")
-      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Lib.hs")
-      (tidal-send-string "import Liveset.Modular.Stream")
-      (tidal-send-string "import Liveset.Modular.Lib")
-      (tidal-send-string "(cps, nudger, getNow) <- cpsUtils'")
-      (tidal-send-string "(d1,t1) <- superDirtSetters getNow")
-      (tidal-send-string "(d2,t2) <- superDirtSetters getNow")
-      (tidal-send-string "(d3,t3) <- superDirtSetters getNow")
-      (tidal-send-string "(d4,t4) <- superDirtSetters getNow")
-      (tidal-send-string "(d5,t5) <- superDirtSetters getNow")
-      (tidal-send-string "(d6,t6) <- superDirtSetters getNow")
-      (tidal-send-string "(d7,t7) <- superDirtSetters getNow")
-      (tidal-send-string "(d8,t8) <- superDirtSetters getNow")
-      (tidal-send-string "(d9,t9) <- superDirtSetters getNow")
-      (tidal-send-string "(d10,t10) <- superDirtSetters getNow")
-      (tidal-send-string "(c1,ct1) <- dirtSetters getNow")
-      (tidal-send-string "(c2,ct2) <- dirtSetters getNow")
-      (tidal-send-string "(c3,ct3) <- dirtSetters getNow")
-      (tidal-send-string "(c4,ct4) <- dirtSetters getNow")
-      (tidal-send-string "(c5,ct5) <- dirtSetters getNow")
-      (tidal-send-string "(c6,ct6) <- dirtSetters getNow")
-      (tidal-send-string "(c7,ct7) <- dirtSetters getNow")
-      (tidal-send-string "(c8,ct8) <- dirtSetters getNow")
-      (tidal-send-string "(c9,ct9) <- dirtSetters getNow")
-      (tidal-send-string "(c10,ct10) <- dirtSetters getNow")
-      (tidal-send-string "(s0,st0) <- zzzSetters getNow")
-      (tidal-send-string "(s1,st1) <- zzzSetters getNow")
-      (tidal-send-string "(s2,st2) <- zzzSetters getNow")
-      (tidal-send-string "(s3,st3) <- zzzSetters getNow")
-      (tidal-send-string "(s4,st4) <- zzzSetters getNow")
-      (tidal-send-string "(s5,st5) <- zzzSetters getNow")
-      (tidal-send-string "(s6,st6) <- zzzSetters getNow")
-      (tidal-send-string "(s7,st7) <- zzzSetters getNow")
-      (tidal-send-string "(s8,st8) <- zzzSetters getNow")
-      (tidal-send-string "(s9,st9) <- zzzSetters getNow")
-      (tidal-send-string "(s10,st10) <- zzzSetters getNow")
-      (tidal-send-string "let hush' = mapM_ ($ silence) [s0,s1,s2,s3,s4,s5,s6,s7,s8]")
-      (tidal-send-string "let bps x = cps (x/2)")
-      (tidal-send-string "let hush = mapM_ ($ silence) [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10]")
-      (tidal-send-string "let solo = (>>) hush")
-      (tidal-send-string ":set prompt \"> \""))))
+           "-XOverloadedStrings"))))
+
+
+
+(use-package highlight-numbers
+  :ensure t
+  :defer t
+  :hook (tidal-mode . highlight-numbers-mode))
+
+
+;; (use-package tidal
+;;   :load-path "elisp/tidal"
+;;   :bind (:map tidal-mode-map ("C-j" . tidal-run-multiple-lines))
+;;   :config
+;;   (progn
+;;     (setq tidal-interpreter "~/.local/bin/stack")
+;;     (setq tidal-interpreter-arguments
+;;           (list
+;;            "ghci"
+;;            "--ghc-options"
+;;            "-XOverloadedStrings"
+;;            "--ghc-options"
+;;            "-i/home/reprimande/src/github.com/reprimande/liveset/modular/lib"))
+;;     (defun tidal-start-haskell ()
+;;       "Start haskell."
+;;       (interactive)
+;;       (if (comint-check-proc tidal-buffer)
+;;           (error "A tidal process is already running")
+;;         (apply
+;;          'make-comint
+;;          "tidal"
+;;          tidal-interpreter
+;;          nil
+;;          tidal-interpreter-arguments)
+;;         (tidal-see-output))
+;;       (tidal-send-string ":set prompt \"\"")
+;;       (tidal-send-string ":set prompt2 \"\"")
+;;       (tidal-send-string ":module Sound.Tidal.Context")
+;;       (tidal-send-string "import qualified Sound.Tidal.Scales as Scales")
+;;       (tidal-send-string "import qualified Sound.Tidal.Chords as Chords")
+;;       (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Stream.hs")
+;;       (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Lib.hs")
+;;       (tidal-send-string "import Liveset.Modular.Stream")
+;;       (tidal-send-string "import Liveset.Modular.Lib")
+;;       (tidal-send-string "(cps, nudger, getNow) <- cpsUtils'")
+;;       (tidal-send-string "(d1,t1) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d2,t2) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d3,t3) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d4,t4) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d5,t5) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d6,t6) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d7,t7) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d8,t8) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d9,t9) <- superDirtSetters getNow")
+;;       (tidal-send-string "(d10,t10) <- superDirtSetters getNow")
+;;       (tidal-send-string "(c1,ct1) <- dirtSetters getNow")
+;;       (tidal-send-string "(c2,ct2) <- dirtSetters getNow")
+;;       (tidal-send-string "(c3,ct3) <- dirtSetters getNow")
+;;       (tidal-send-string "(c4,ct4) <- dirtSetters getNow")
+;;       (tidal-send-string "(c5,ct5) <- dirtSetters getNow")
+;;       (tidal-send-string "(c6,ct6) <- dirtSetters getNow")
+;;       (tidal-send-string "(c7,ct7) <- dirtSetters getNow")
+;;       (tidal-send-string "(c8,ct8) <- dirtSetters getNow")
+;;       (tidal-send-string "(c9,ct9) <- dirtSetters getNow")
+;;       (tidal-send-string "(c10,ct10) <- dirtSetters getNow")
+;;       (tidal-send-string "(s0,st0) <- zzzSetters getNow")
+;;       (tidal-send-string "(s1,st1) <- zzzSetters getNow")
+;;       (tidal-send-string "(s2,st2) <- zzzSetters getNow")
+;;       (tidal-send-string "(s3,st3) <- zzzSetters getNow")
+;;       (tidal-send-string "(s4,st4) <- zzzSetters getNow")
+;;       (tidal-send-string "(s5,st5) <- zzzSetters getNow")
+;;       (tidal-send-string "(s6,st6) <- zzzSetters getNow")
+;;       (tidal-send-string "(s7,st7) <- zzzSetters getNow")
+;;       (tidal-send-string "(s8,st8) <- zzzSetters getNow")
+;;       (tidal-send-string "(s9,st9) <- zzzSetters getNow")
+;;       (tidal-send-string "(s10,st10) <- zzzSetters getNow")
+;;       (tidal-send-string "let hush' = mapM_ ($ silence) [s0,s1,s2,s3,s4,s5,s6,s7,s8]")
+;;       (tidal-send-string "let bps x = cps (x/2)")
+;;       (tidal-send-string "let hush = mapM_ ($ silence) [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10]")
+;;       (tidal-send-string "let solo = (>>) hush")
+;;       (tidal-send-string ":set prompt \"> \""))))
 
 (add-hook 'font-lock-mode-hook
           '(lambda ()
@@ -816,7 +927,6 @@ document.addEventListener('DOMContentLoaded', () => {
 (setq auto-insert-alist
       (nconc '(
                ("\\.html$" . "tmpl.html")
-               ("\\.py$" . "tmpl.py")
                ("\\.pl$" . "tmpl.pl")
                ("\\.rb$" . "tmpl.rb")
                ("\\.php$" . "tmpl.php")

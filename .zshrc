@@ -14,13 +14,9 @@ zplug "Tarrasch/zsh-functional"
 
 zplug "plugins/git", from:oh-my-zsh
 
-zplug "yous/lime"
-
-#zplug 'dracula/zsh', as:theme
+zplug 'dracula/zsh', as:theme
 
 export LIME_DIR_DISPLAY_COMPONENTS=2
-
-#ZSH_THEME="lime"
 
 if ! zplug check --verbose; then
     printf "Install? [y/N]: "
@@ -70,14 +66,16 @@ setopt transient_rprompt
 
 
 # shell
-alias ll="ls -al --color=auto"
+alias ll="ls -alG"
 alias less="less -R"
 alias history="history 1"
 
 alias g='cd $(ghq root)/$(ghq list | peco)'
+alias fig='docker-compose'
 
 # emacs
 ## emacsclient
+alias emacs="emacs -nw"
 alias e="emacsclient -n"
 
 ## cask
@@ -112,31 +110,46 @@ export GOENVHOME=$HOME/workspace
 # stack
 export PATH="$HOME/.local/bin:$PATH"
 
+# tfenv
+export PATH="$HOME/.tfenv/bin:$PATH"
+
+# direnv
+eval "$(direnv hook zsh)"
+
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '$HOME/google-cloud-sdk/path.zsh.inc' ]; then source '$HOME/google-cloud-sdk/path.zsh.inc'; fi
+if [ -f "$HOME/google-cloud-sdk/path.zsh.inc" ]; then source "$HOME/google-cloud-sdk/path.zsh.inc"; fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f '$HOME/google-cloud-sdk/completion.zsh.inc' ]; then source '$HOME/google-cloud-sdk/completion.zsh.inc'; fi
+if [ -f "$HOME/google-cloud-sdk/completion.zsh.inc" ]; then source "$HOME/google-cloud-sdk/completion.zsh.inc"; fi
+
+
+PATH=$PATH:$HOME/google-cloud-sdk/platform/google_appengine/
 
 # kubectl
 source <(kubectl completion zsh)
+autoload -U colors; colors
+# source $HOME/.zsh/zsh-kubectl-prompt/kubectl.zsh
+# PROMPT=$PROMPT'%{$fg[magenta]%}($ZSH_KUBECTL_PROMPT)%{$reset_color%} '
+
+# kubebuilder
+PATH=$PATH:$HOME/local/kubebuilder/bin
+
+source "/usr/local/opt/kube-ps1/share/kube-ps1.sh"
+PS1='$(kube_ps1)'$PS1
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 source ~/.zprofile
 export GOENV_ROOT="$HOME/.goenv"
 export PATH="$GOENV_ROOT/bin:$PATH"
 eval "$(goenv init -)"
 
-export VISUAL=emacs
-export EDITOR=emacs
+export VISUAL="emacs -nw -q"
+export EDITOR="emacs -nw -q"
 
+source ~/.zsh/http_status
 
 fpath+=~/.zfunc
 
