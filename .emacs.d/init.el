@@ -83,14 +83,14 @@
   (dired-recursive-deletes 'top)
   (dired-listing-switches "-lahp"))
 
-(advice-add 'dired-find-file :after 'delete-other-windows)
-
 ;; wdired
 (use-package wdired
   :ensure t
   :defer t
   :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
   )
+
+ (advice-add 'dired-find-file :after 'delete-other-windows)
 ;; 改行マーク/全角スペースマーク/タブマーク
 (setq whitespace-style
       '(tabs tab-mark spaces space-mark face))
@@ -110,6 +110,8 @@
     (set-face-background 'whitespace-space nil)
     (set-face-foreground 'whitespace-tab "#555555")
     (set-face-background 'whitespace-tab nil)))
+
+
 
 
 ;; 行末の空白をめだたせる M-x delete-trailing-whitespace で削除出来る
@@ -303,10 +305,7 @@
         ("C-n" . company-select-next)
         ("C-p" . company-select-previous))
   (:map emacs-lisp-mode-map
-        ("C-M-i" . company-complete))
-  :config
-  (progn
-    (global-company-mode)))
+        ("C-M-i" . company-complete)))
 
 ;; flycheck
 (use-package flycheck
@@ -336,8 +335,42 @@
 ;; yasnipet
 (use-package yasnippet
   :ensure t
+  :config (progn (yas-global-mode 1)))
+
+ ;; autoinsert
+(auto-insert-mode 1)
+(setq auto-insert-directory "~/.emacs.d/templates/")
+(setq auto-insert-alist
+      (nconc '(
+               ("\\.html$" . "tmpl.html")
+               ("\\.py$" . "tmpl.py")
+               ("\\.pl$" . "tmpl.pl")
+               ("\\.rb$" . "tmpl.rb")
+               ("\\.php$" . "tmpl.php")
+               ("\\.tsx$" . "tmpl.tsx")
+               ) auto-insert-alist))
+
+(add-hook 'find-file-not-found-hooks 'auto-insert)
+
+ ;; ESS
+(use-package ess
+  :ensure t
+  :init (require 'ess))
+
+ ;; stan
+(use-package stan-snippets
+  :ensure t
   :defer t)
 
+ (use-package stan-mode
+  :ensure t
+  :defer t)
+
+ (use-package octave
+  :defer t
+  :config
+  (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
+  (setf octave-block-offset 4))
 
 (use-package w3m
   :ensure t
@@ -355,6 +388,20 @@
   (setq w3m-use-cookies t)
   (setq w3m-default-display-inline-images t))
 
+
+;; lsp-mode
+(use-package lsp-mode
+  :commands lsp
+  :hook (prog-major-mode . lsp-prog-major-mode-enable))
+
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode))
+
+(use-package company-lsp
+  :commands company-lsp
+  :after (lsp-mode company yasnippet))
 
 (require 'w3m)
 
@@ -375,6 +422,7 @@
 ;; Scheme / Gauche
 (setq process-coding-system-alist
       (cons '("gosh" utf-8 . utf-8) process-coding-system-alist))
+
 (setq scheme-program-name "gosh -i")
 (autoload 'scheme-mode "cmuscheme" "Major mode for Scheme." t)
 (autoload 'run-scheme "cmuscheme" "Run ad inferior Scheme process." t)
@@ -465,17 +513,6 @@
   (progn
     (setq-default rust-format-on-save t)))
 
-;; scala
-(use-package ensime
-  :ensure t
-  :pin melpa-stable)
-
-(use-package sbt-mode
-  :pin melpa)
-
-(use-package scala-mode
-  :pin melpa)
-
 ;; python
 (use-package py-autopep8
   :ensure t
@@ -486,20 +523,21 @@
     (setq py-autopep8-options '("--max-line-length=100"))))
 
 ;; golang
-(use-package go-autocomplete
-  :ensure t
-  :defer t)
+;; (use-package go-autocomplete
+;;   :ensure t
+;;   :defer t)
 
-(use-package company-go
-  :ensure t
-  :defer t)
+;; (use-package company-go
+;;   :ensure t
+;;   :defer t)
 
 (use-package go-mode
   :ensure t
   :defer t
   :hook ((before-save . gofmt-before-save)
-         (go-mode . flycheck-mode)
          (go-mode . (lambda ()
+                      (let ((envs '("GOROOT" "GOPATH")))
+                        (exec-path-from-shell-copy-envs envs))
                       (local-set-key (kbd "M-.") 'godef-jump)
                       (set (make-local-variable 'company-backends) '(company-go))
                       (require 'auto-complete-config)
@@ -512,11 +550,25 @@
   (progn
     (add-to-list 'exec-path (expand-file-name "~/bin"))))
 
+(use-package lsp-go
+  :after (lsp-mode go-mode)
+  :custom (lsp-go-language-serfer-flags
+           `(
+             "-gocodecompletion"
+             "-diagnostics"
+             "-lint-tool=golint"))
+  :hook (go-mode . lsp-go-enable)
+  :commands lsp-go-enable)
+
 ;; javascript
 (use-package js2-mode
   :ensure t
   :defer t
   :mode "\\.js$"
+  :config
+  (progn
+    (setq js2-strict-missing-semi-warning nil)
+    (setq js2-missing-semi-one-line-override nil))
   :hook ((js2-mode . (lambda ()
                        (setq js2-basic-offset 2)
                        (setq prettier-js-args
@@ -558,18 +610,6 @@
                              (eldoc-mode t)
                              (tide-hl-identifier-mode t)
                              (company-mode +1))))
-
-(defun enable-minor-mode (my-pair)
-  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
-  (if (buffer-file-name)
-      (if (string-match (car my-pair) buffer-file-name)
-          (funcall (cdr my-pair)))))
-
-(defun enable-minor-mode (my-pair)
-  "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
-  (if (buffer-file-name)
-      (if (string-match (car my-pair) buffer-file-name)
-      (funcall (cdr my-pair)))))
 
 (defun enable-minor-mode (my-pair)
   "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
@@ -637,15 +677,6 @@
      '(sclang-indent-level 2)
      '(sclang-library-configuration-file "~/.local/share/SuperCollider/sclang_conf.yaml"))))
 
-;; tidal
-;; (use-package tidal
-;;   :ensure t
-;;   :defer t
-;;   :config
-;;   (progn
-;;     (setq tidal-interpreter "~/.local/bin/stack")
-;;     (setq tidal-interpreter-arguments (list "ghci" "--ghci-options" "-XOverloadedStrings"))))
-
 (use-package highlight-numbers
   :ensure t
   :defer t
@@ -661,72 +692,12 @@
           (list
            "ghci"
            "--ghc-options"
-           "-XOverloadedStrings"
-           "--ghc-options"
-           "-i/home/reprimande/src/github.com/reprimande/liveset/modular/lib"))
-    (defun tidal-start-haskell ()
-      "Start haskell."
-      (interactive)
-      (if (comint-check-proc tidal-buffer)
-          (error "A tidal process is already running")
-        (apply
-         'make-comint
-         "tidal"
-         tidal-interpreter
-         nil
-         tidal-interpreter-arguments)
-        (tidal-see-output))
-      (tidal-send-string ":set prompt \"\"")
-      (tidal-send-string ":set prompt2 \"\"")
-      (tidal-send-string ":module Sound.Tidal.Context")
-      (tidal-send-string "import qualified Sound.Tidal.Scales as Scales")
-      (tidal-send-string "import qualified Sound.Tidal.Chords as Chords")
-      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Stream.hs")
-      (tidal-send-string ":load /home/reprimande/src/github.com/reprimande/liveset/modular/lib/Liveset/Modular/Lib.hs")
-      (tidal-send-string "import Liveset.Modular.Stream")
-      (tidal-send-string "import Liveset.Modular.Lib")
-      (tidal-send-string "(cps, nudger, getNow) <- cpsUtils'")
-      (tidal-send-string "(d1,t1) <- superDirtSetters getNow")
-      (tidal-send-string "(d2,t2) <- superDirtSetters getNow")
-      (tidal-send-string "(d3,t3) <- superDirtSetters getNow")
-      (tidal-send-string "(d4,t4) <- superDirtSetters getNow")
-      (tidal-send-string "(d5,t5) <- superDirtSetters getNow")
-      (tidal-send-string "(d6,t6) <- superDirtSetters getNow")
-      (tidal-send-string "(d7,t7) <- superDirtSetters getNow")
-      (tidal-send-string "(d8,t8) <- superDirtSetters getNow")
-      (tidal-send-string "(d9,t9) <- superDirtSetters getNow")
-      (tidal-send-string "(d10,t10) <- superDirtSetters getNow")
-      (tidal-send-string "(c1,ct1) <- dirtSetters getNow")
-      (tidal-send-string "(c2,ct2) <- dirtSetters getNow")
-      (tidal-send-string "(c3,ct3) <- dirtSetters getNow")
-      (tidal-send-string "(c4,ct4) <- dirtSetters getNow")
-      (tidal-send-string "(c5,ct5) <- dirtSetters getNow")
-      (tidal-send-string "(c6,ct6) <- dirtSetters getNow")
-      (tidal-send-string "(c7,ct7) <- dirtSetters getNow")
-      (tidal-send-string "(c8,ct8) <- dirtSetters getNow")
-      (tidal-send-string "(c9,ct9) <- dirtSetters getNow")
-      (tidal-send-string "(c10,ct10) <- dirtSetters getNow")
-      (tidal-send-string "(s0,st0) <- zzzSetters getNow")
-      (tidal-send-string "(s1,st1) <- zzzSetters getNow")
-      (tidal-send-string "(s2,st2) <- zzzSetters getNow")
-      (tidal-send-string "(s3,st3) <- zzzSetters getNow")
-      (tidal-send-string "(s4,st4) <- zzzSetters getNow")
-      (tidal-send-string "(s5,st5) <- zzzSetters getNow")
-      (tidal-send-string "(s6,st6) <- zzzSetters getNow")
-      (tidal-send-string "(s7,st7) <- zzzSetters getNow")
-      (tidal-send-string "(s8,st8) <- zzzSetters getNow")
-      (tidal-send-string "(s9,st9) <- zzzSetters getNow")
-      (tidal-send-string "(s10,st10) <- zzzSetters getNow")
-      (tidal-send-string "let hush' = mapM_ ($ silence) [s0,s1,s2,s3,s4,s5,s6,s7,s8]")
-      (tidal-send-string "let bps x = cps (x/2)")
-      (tidal-send-string "let hush = mapM_ ($ silence) [c1,c2,c3,c4,c5,c6,c7,c8,c9,c10,d1,d2,d3,d4,d5,d6,d7,d8,d9,d10]")
-      (tidal-send-string "let solo = (>>) hush")
-      (tidal-send-string ":set prompt \"> \""))))
+           "-XOverloadedStrings"))
+    ))
 
 (add-hook 'font-lock-mode-hook
           '(lambda ()
              (set-face-foreground 'font-lock-constant-face "magenta")))
-
 
 ;; faust
 (use-package faust-mode
@@ -761,11 +732,6 @@
 
 ;; toml
 (use-package toml-mode
-  :ensure t
-  :defer t)
-
-;; terraform
-(use-package terraform-mode
   :ensure t
   :defer t)
 
@@ -804,48 +770,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 ")))
-
-
-(use-package yasnippet
-  :ensure t
-  :defer t)
-
-;; autoinsert
-(auto-insert-mode 1)
-(setq auto-insert-directory "~/.emacs.d/templates/")
-(setq auto-insert-alist
-      (nconc '(
-               ("\\.html$" . "tmpl.html")
-               ("\\.py$" . "tmpl.py")
-               ("\\.pl$" . "tmpl.pl")
-               ("\\.rb$" . "tmpl.rb")
-               ("\\.php$" . "tmpl.php")
-               ("\\.tsx$" . "tmpl.tsx")
-               ) auto-insert-alist))
-
-(add-hook 'find-file-not-found-hooks 'auto-insert)
-
-
-;; ESS
-(use-package ess
-  :ensure t
-  :init (require 'ess))
-
-;; stan
-(use-package stan-snippets
-  :ensure t
-  :defer t)
-
-(use-package stan-mode
-  :ensure t
-  :defer t)
-
-
-(use-package octave
-  :defer t
-  :config
-  (add-to-list 'auto-mode-alist '("\\.m$" . octave-mode))
-  (setf octave-block-offset 4))
 
 ;; org
 ;; (use-package org
