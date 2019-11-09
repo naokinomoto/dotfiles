@@ -1,5 +1,5 @@
 (setq gc-cons-threshold (* 1024 1024 1024))
-(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold (* 8 1024 1024))))
+(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold (* 1 1024 1024))))
 (setq garbage-collection-messages t)
 
 (add-to-list 'exec-path "/usr/local/bin")
@@ -12,6 +12,11 @@
 (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/") t)
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (package-initialize)
+
+
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize)
+  )
 
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-exists-p custom-file)
@@ -74,45 +79,41 @@
 
 (ffap-bindings)
 
-(use-package dired
-  :ensure nil
-  :commands (dired)
-  :custom
-  (dired-dwim-target t "Enable side-by-side `dired' buffer targets.")
-  (dired-recursive-copies 'always "Better recursion in `dired'.")
-  (dired-recursive-deletes 'top)
-  (dired-listing-switches "-lahp"))
+;; (use-package dired
+;;   :ensure nil
+;;   :commands (dired)
+;;   :custom
+;;   (dired-dwim-target t "Enable side-by-side `dired' buffer targets.")
+;;   (dired-recursive-copies 'always "Better recursion in `dired'.")
+;;   (dired-recursive-deletes 'top)
+;;   (dired-listing-switches "-lahp"))
 
 ;; wdired
-(use-package wdired
-  :ensure t
-  :defer t
-  :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
-  )
+;; (use-package wdired
+;;   :ensure t
+;;   :defer t
+;;   :bind (:map dired-mode-map ("r" . wdired-change-to-wdired-mode))
+;;   )
 
- (advice-add 'dired-find-file :after 'delete-other-windows)
+;;  (advice-add 'dired-find-file :after 'delete-other-windows)
+
 ;; 改行マーク/全角スペースマーク/タブマーク
-(setq whitespace-style
-      '(tabs tab-mark spaces space-mark face))
-(setq whitespace-space-regexp "\\(\x3000+\\)")
-(setq whitespace-display-mappings
-      '((space-mark ?\x3000 [?\□])
-        (tab-mark   ?\t   [?\xBB ?\t])
-        ))
-
 (use-package whitespace
   :ensure t
-  :defer t
   :config
   (progn
     (global-whitespace-mode 1)
     (set-face-foreground 'whitespace-space "#555555")
     (set-face-background 'whitespace-space nil)
     (set-face-foreground 'whitespace-tab "#555555")
-    (set-face-background 'whitespace-tab nil)))
-
-
-
+    (set-face-background 'whitespace-tab nil)
+    (setq whitespace-style
+      '(tabs tab-mark spaces space-mark trailing face))
+    (setq whitespace-space-regexp "\\(\x3000+\\)")
+    (setq whitespace-display-mappings
+          '((space-mark ?\x3000 [?\□])
+            (tab-mark   ?\t   [?\xBB ?\t])))
+    ))
 
 ;; 行末の空白をめだたせる M-x delete-trailing-whitespace で削除出来る
 (when (boundp 'show-trailing-whitespace) (setq-default show-trailing-whitespace t))
@@ -192,13 +193,6 @@
   :defer t
   :bind ("C-x C-j" . skk-mode))
 
-;; neotree
-(use-package neotree
-  :ensure t
-  :defer t
-  :bind
-  (([f8] . neotree-toggle)))
-
 ;;;;;;;;;;;;;;;;;;;;
 ;; Keybinds
 
@@ -264,32 +258,54 @@
 (global-set-key "\C-q\C-p" 'windmove-up)
 (global-set-key "\C-q\C-n" 'windmove-down)
 
-;; Font
-
-(set-face-attribute 'default nil
-             :family "Ricty"
-             :height 100)
-
 ;; helm
 (use-package helm
   :ensure t
-  ; :diminish helm-mode "h"
+  :bind  (("M-x"     . helm-M-x)
+          ("C-c f"   . helm-mini)
+          ("C-c C-s" . helm-ag)
+          ("C-c C-f" . helm-find-files)
+          ("C-c b"   . helm-buffers-list)
+          ("C-c i"   . helm-imenu)
+          ("C-c o"   . helm-occur)
+          :map helm-map
+          ("C-h" . delete-backward-char)
+          :map helm-find-files-map
+          ("C-h" . delete-backward-char))
+  :init (progn
+          (use-package helm-config)
+          (helm-mode 1)))
+
+(use-package helm-swoop
+  :ensure t)
+
+(use-package helm-ag
+  :ensure t
+  :defer t)
+
+(use-package helm-projectile
+  :ensure t
+  :defer t)
+
+(use-package projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-global-mode t)
+  (helm-projectile-on))
+
+;; neotree
+(use-package neotree
+  :ensure t
+  :defer t
+  :after
+  projectile
+  :custom
+  (neo-theme 'nerd2)
   :bind
-  (("M-x"     . helm-M-x)
-   ("C-c f"   . helm-mini)
-   ("C-c s"   . helm-ag)
-   ("C-c C-f" . helm-find-files)
-   ("C-c b"   . helm-buffers-list)
-   ("C-c i"   . helm-imenu)
-   :map helm-map
-   ("C-h" . delete-backward-char)
-   :map helm-find-files-map
-   ("C-h" . delete-backward-char)
-   )
-  :init
-  (progn
-    (use-package helm-config)
-    (helm-mode 1)))
+  (([f8] . neotree-toggle)))
+
 
 ;; company
 (use-package company
@@ -389,17 +405,52 @@
   (setq w3m-default-display-inline-images t))
 
 
+(setq package-check-signature nil)
+
 ;; lsp-mode
 (use-package lsp-mode
-  :commands lsp
+  :ensure t
+  :defer t
   :hook (prog-major-mode . lsp-prog-major-mode-enable))
 
 (use-package lsp-ui
+  :ensure t
+  :defer t
   :commands lsp-ui-mode
   :after lsp-mode
-  :hook (lsp-mode . lsp-ui-mode))
+  :hook (lsp-mode . lsp-ui-mode)
+  ;; :custom
+    ;;   ;; lsp-ui-doc
+    ;; (lsp-ui-doc-enable t)
+    ;; (lsp-ui-doc-header t)
+    ;; (lsp-ui-doc-include-signature t)
+    ;; (lsp-ui-doc-position 'top) ;; top, bottom, or at-point
+    ;; (lsp-ui-doc-max-width 150)
+    ;; (lsp-ui-doc-max-height 30)
+    ;; (lsp-ui-doc-use-childframe t)
+    ;; (lsp-ui-doc-use-webkit t)
+    ;; ;; lsp-ui-flycheck
+    ;; (lsp-ui-flycheck-enable nil)
+    ;; ;; lsp-ui-sideline
+    ;; (lsp-ui-sideline-enable nil)
+    ;; (lsp-ui-sideline-ignore-duplicate t)
+    ;; (lsp-ui-sideline-show-symbol t)
+    ;; (lsp-ui-sideline-show-hover t)
+    ;; (lsp-ui-sideline-show-diagnostics nil)
+    ;; (lsp-ui-sideline-show-code-actions nil)
+    ;; ;; lsp-ui-imenu
+    ;; (lsp-ui-imenu-enable nil)
+    ;; (lsp-ui-imenu-kind-position 'top)
+    ;; ;; lsp-ui-peek
+    ;; (lsp-ui-peek-enable t)
+    ;; (lsp-ui-peek-peek-height 20)
+    ;; (lsp-ui-peek-list-width 50)
+    ;; (lsp-ui-peek-fontify 'on-demand) ;; never, on-demand, or always
+    )
 
 (use-package company-lsp
+  :ensure t
+  :defer t
   :commands company-lsp
   :after (lsp-mode company yasnippet))
 
@@ -523,13 +574,13 @@
     (setq py-autopep8-options '("--max-line-length=100"))))
 
 ;; golang
-;; (use-package go-autocomplete
-;;   :ensure t
-;;   :defer t)
+(use-package company-go
+  :ensure t
+  :defer t)
 
-;; (use-package company-go
-;;   :ensure t
-;;   :defer t)
+(use-package exec-path-from-shell
+  :ensure t
+  :defer t)
 
 (use-package go-mode
   :ensure t
@@ -540,9 +591,9 @@
                         (exec-path-from-shell-copy-envs envs))
                       (local-set-key (kbd "M-.") 'godef-jump)
                       (set (make-local-variable 'company-backends) '(company-go))
-                      (require 'auto-complete-config)
-                      (ac-config-default)
                       (company-mode)
+                      (lsp)
+                      (setq gofmt-command "goimports")
                       (setq indent-tabs-mode nil)
                       (setq c-basic-offset 4)
                       (setq tab-width 4))))
@@ -550,17 +601,28 @@
   (progn
     (add-to-list 'exec-path (expand-file-name "~/bin"))))
 
-(use-package lsp-go
-  :after (lsp-mode go-mode)
-  :custom (lsp-go-language-serfer-flags
-           `(
-             "-gocodecompletion"
-             "-diagnostics"
-             "-lint-tool=golint"))
-  :hook (go-mode . lsp-go-enable)
-  :commands lsp-go-enable)
-
 ;; javascript
+;; (use-package js2-mode
+;;   :ensure t
+;;   :defer t
+;;   :mode "\\.js$"
+;;   :config
+;;   (progn
+;;     (setq js2-strict-missing-semi-warning nil)
+;;     (setq js2-missing-semi-one-line-override nil))
+;;   :hook ((js2-mode . (lambda ()
+;;                        (setq js2-basic-offset 2)
+;;                        (setq prettier-js-args
+;;                              '(
+;;                                "--tab-width" "2"
+;;                                "--single-quote" "true"
+;;                                "--semi" "true"
+;;                                ))
+;;                        ))
+;;          ; (js2-mode . ac-js2-mode)
+;;          (js-mode . js2-minor-mode)))
+
+
 (use-package js2-mode
   :ensure t
   :defer t
@@ -570,16 +632,10 @@
     (setq js2-strict-missing-semi-warning nil)
     (setq js2-missing-semi-one-line-override nil))
   :hook ((js2-mode . (lambda ()
-                       (setq js2-basic-offset 2)
-                       (setq prettier-js-args
-                             '(
-                               "--tab-width" "2"
-                               "--single-quote" "true"
-                               "--no-semi" "true"
-                               ))
-                       ))
+                       (setq js2-basic-offset 2)))
          ; (js2-mode . ac-js2-mode)
          (js-mode . js2-minor-mode)))
+
 
 (use-package json-mode
   :ensure t
@@ -597,19 +653,18 @@
 (use-package typescript-mode
   :ensure t
   :defer t
-  :hook (typescript-mode . (lambda ()
-                             (setq prettier-js-args
-                                   '(
-                                     "--tab-width" "4"
-                                     "--single-quote" "true"
-                                     "--no-semi" "false"
-                                     ))
+  :hook
+  ((before-save . tide-format-before-save)
+  (typescript-mode . (lambda ()
                              (tide-setup)
                              (flycheck-mode t)
                              (setq flycheck-check-syntax-automatically '(save mode-enabled))
+                             (setq company-tooltip-align-annotations t)
                              (eldoc-mode t)
                              (tide-hl-identifier-mode t)
-                             (company-mode +1))))
+                             (company-mode t)
+                             (lsp)
+                             ))))
 
 (defun enable-minor-mode (my-pair)
   "Enable minor mode if filename match the regexp.  MY-PAIR is a cons cell (regexp . minor-mode)."
@@ -619,15 +674,7 @@
 
 (use-package prettier-js
   :ensure t
-  :defer t
-  :hook ((js2-mode . prettier-js-mode)
-         (typescript-mode . prettier-js-mode)
-         (web-mode . (lambda ()
-                       (enable-minor-mode
-                        '("\\.jsx?\\'" . prettier-js-mode))
-                       (enable-minor-mode
-                        '("\\.tsx?\\'" . prettier-js-mode))))))
-
+  :defer t)
 
 ;; web-mode
 (defun my-web-mode-hook ()
@@ -637,7 +684,7 @@
            (setq prettier-js-args '(
                                     "--tab-width" "4"
                                     "--single-quote" "true"
-                                    "--no-semi" "false"
+                                    "--semi" "true"
                                     ))))
     (setq web-mode-attr-indent-offset nil)
     (setq web-mode-markup-indent-offset i)
@@ -667,6 +714,11 @@
             ad-do-it)
         ad-do-it))))
 
+
+(use-package kotlin-mode
+  :ensure t
+  :defer t)
+
 ;; supercollider
 (use-package sclang
   :load-path "elisp/scel"
@@ -683,17 +735,17 @@
   :hook (tidal-mode . highlight-numbers-mode))
 
 (use-package tidal
-  :load-path "elisp/tidal"
-  :bind (:map tidal-mode-map ("C-j" . tidal-run-multiple-lines))
+  ;; :load-path "elisp/tidal"
+  :ensure t
+  :defer t
+  :bind (:map tidal-mode-map ("C-o" . tidal-run-multiple-lines))
   :config
   (progn
-    (setq tidal-interpreter "~/.local/bin/stack")
-    (setq tidal-interpreter-arguments
-          (list
-           "ghci"
-           "--ghc-options"
-           "-XOverloadedStrings"))
-    ))
+    (setq tidal-interpreter "stack")
+    (setq tidal-interpreter-arguments (list "exec" "--package" "tidal" "--" "ghci"))
+    ;; (setq tidal-interpreter-arguments (list "ghci" "--ghc-options" "-XOverloadedStrings"))
+    (setq tidal-boot-script-path "~/.tidal/BootTidal.hs"
+          )))
 
 (add-hook 'font-lock-mode-hook
           '(lambda ()
@@ -718,10 +770,20 @@
   :ensure t
   :defer t)
 
-;; elixir
+;; Makefile
+(use-package make-mode
+  :ensure t
+  :defer t
+  :hook
+  (setq indent-tabs-mode nil))
 
 ;; docker
 (use-package dockerfile-mode
+  :ensure t
+  :defer t)
+
+;; terraform
+(use-package terraform-mode
   :ensure t
   :defer t)
 
@@ -829,11 +891,108 @@ document.addEventListener('DOMContentLoaded', () => {
   (setq interprogram-cut-function 'paste-to-osx)
   (setq interprogram-paste-function 'copy-from-osx))
 
+(cond (window-system
+  (setq x-select-enable-clipboard t)
+  ))
+
+(setq select-enable-primary nil)
+(setq select-enable-clipboard t)
+
+(use-package xclip
+  :ensure t
+  :init (progn
+          (xclip-mode 1)))
+
 ;; theme
-(when (eq window-system 'mac)
-  (use-package atom-one-dark-theme
-    :ensure t)
-  (load-theme 'atom-one-dark t))
+(use-package doom-themes
+  :ensure t
+  :custom
+    (doom-themes-enable-italic t)
+    (doom-themes-enable-bold t)
+    :custom-face
+    (doom-modeline-bar ((t (:background "#6272a4"))))
+  :config
+  (load-theme 'doom-vibrant t)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config)
+  (doom-themes-visual-bell-config))
+
+(use-package doom-modeline
+  :ensure t
+  :hook (after-init . doom-modeline-mode))
+
+(when (memq window-system '(mac ns x))
+  (set-frame-parameter nil 'alpha 95)
+  )
+
+;; Font
+(set-face-attribute 'default nil  :height 125)
+
+(set-fontset-font (frame-parameter nil 'font)
+                  'japanese-jisx0208
+                  (cons "Ricty Discord" "iso10646-1"))
+
+(set-fontset-font (frame-parameter nil 'font)
+                  'japanese-jisx0212
+                  (cons "Ricty Discord" "iso10646-1"))
+
+(set-fontset-font (frame-parameter nil 'font)
+                  'katakana-jisx0201
+                  (cons "Ricty Discord" "iso10646-1"))
+
+(use-package which-key
+  :ensure t
+  :diminish which-key-mode
+  :hook (after-init . which-key-mode))
+
+(use-package hydra
+  :ensure t
+  :defer t)
+
+(use-package highlight-indent-guides
+  :ensure t
+  :diminish
+  :hook
+  ((prog-mode yaml-mode) . highlight-indent-guides-mode)
+  :custom
+  (highlight-indent-guides-auto-enabled t)
+  (highlight-indent-guides-responsive t)
+  (highlight-indent-guides-method 'character)) ; column
+
+
+(use-package volatile-highlights
+  :ensure t
+  :diminish
+  :hook
+  (after-init . volatile-highlights-mode))
+
+(use-package org-pomodoro
+  :ensure t
+  ;; :after org-agenda
+  :custom
+  (org-pomodoro-ask-upon-killing t)
+  (org-pomodoro-format "%s")
+  (org-pomodoro-short-break-format "%s")
+  (org-pomodoro-long-break-format  "%s")
+  :custom-face
+  (org-pomodoro-mode-line ((t (:foreground "#ff5555"))))
+  (org-pomodoro-mode-line-break   ((t (:foreground "#50fa7b"))))
+  :hook
+  (org-pomodoro-started . (lambda () (notifications-notify
+                                      :title "org-pomodoro"
+                                      :body "Let's focus for 25 minutes!")))
+  (org-pomodoro-finished . (lambda () (notifications-notify
+                                       :title "org-pomodoro"
+                                       :body "Well done! Take a break.")))
+  :config
+  :bind (:map org-agenda-mode-map
+             ("p" . org-pomodoro)))
+
+
+;; aspell
+(setq-default ispell-program-name "aspell")
+(eval-after-load "ispell"
+  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
 
 ;; emacs server
 (use-package server
